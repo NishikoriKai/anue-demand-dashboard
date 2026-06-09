@@ -1417,6 +1417,30 @@ renderHist();
 calcScore();
 loadHistory();
 loadBrandEvents();
+loadLatestRecord();
+
+// ── 載入最新一筆記錄，自動填入輸入欄位 ──
+async function loadLatestRecord() {
+  if (!isOnline()) return;
+  try {
+    const rows = await apiGet('getDaily', { limit: 1 });
+    if (!rows || rows.length === 0) return;
+    const r = rows[0];
+    // 填入輸入欄位
+    if (r.fund_trends  !== '' && r.fund_trends  != null) document.getElementById('v-fund').value  = r.fund_trends;
+    if (r.etf_trends   !== '' && r.etf_trends   != null) document.getElementById('v-etf').value   = r.etf_trends;
+    if (r.brand_trends !== '' && r.brand_trends != null) document.getElementById('v-brand').value = r.brand_trends;
+    if (r.taiex_vol    !== '' && r.taiex_vol    != null) document.getElementById('v-vol').value   = r.taiex_vol;
+    // 重新計算指數
+    calcScore();
+    // 顯示提示
+    setStatus('save-status', '已自動載入最新記錄：' + r.date, 'var(--accent3)');
+    setTimeout(() => setStatus('save-status', ''), 4000);
+  } catch(ex) {
+    // 靜默失敗，不影響頁面使用
+    console.log('loadLatestRecord:', ex.message);
+  }
+}
 </script>
 </body>
 </html>

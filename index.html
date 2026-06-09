@@ -1176,7 +1176,7 @@ async function apiGet(action, params={}) {
   const url = new URL(API_URL);
   url.searchParams.set('action', action);
   Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
-  const res  = await fetch(url.toString());
+  const res  = await fetch(url.toString(), {redirect:'follow'});
   const json = await res.json();
   if (!json.ok) throw new Error(json.error);
   return json.data;
@@ -1184,11 +1184,11 @@ async function apiGet(action, params={}) {
 
 async function apiPost(body) {
   if (!isOnline()) return null;
-  const res  = await fetch(API_URL, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(body)
-  });
+  // Use GET with encoded payload to avoid CORS preflight
+  const url = new URL(API_URL);
+  url.searchParams.set('method', 'POST');
+  url.searchParams.set('payload', JSON.stringify(body));
+  const res  = await fetch(url.toString(), {redirect:'follow'});
   const json = await res.json();
   if (!json.ok) throw new Error(json.error);
   return json.data;

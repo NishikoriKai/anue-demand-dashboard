@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>開戶需求監測儀表板 v8 | 鉅亨買基金</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600&family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+:root{
+  --bg:#f4f5f7;--surface:#fff;--surface2:#f0f1f4;--border:#dde0e8;
+  --accent:#00a882;--accent2:#e05520;--accent3:#4a72e8;
+  --warn:#b08000;--text:#1a1d24;--text-dim:#7a8094;--text-mid:#4a5068;
+  --positive:#16a34a;--negative:#dc2626;--issue:#9ca3af;
+  --mono:'IBM Plex Mono',monospace;--body:'Noto Sans TC',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:14px;line-height:1.6;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,168,130,.05)1px,transparent 1px),linear-gradient(90deg,rgba(0,168,130,.05)1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
+.wrap{max-width:1320px;margin:0 auto;padding:32px 24px;position:relative;z-index:1}
+
+/* Header */
+header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:40px;padding-bottom:20px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:16px}
+.h-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--accent);text-transform:uppercase;margin-bottom:6px}
+h1{font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.3}
+h1 em{color:var(--accent);font-style:normal}
+.vtag{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:2px;background:rgba(0,168,130,.1);border:1px solid rgba(0,168,130,.25);color:var(--accent);margin-left:8px}
+.h-right{text-align:right;font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.9}
+
+/* Section label */
+.sl{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--text-dim);text-transform:uppercase;margin:32px 0 16px;display:flex;align-items:center;gap:8px}
+.sl:first-of-type{margin-top:0}
+.sl::after{content:'';flex:1;height:1px;background:var(--border)}
+.sl-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+/* Grids */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px}
+.g21{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:20px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:22px}
+.ct{font-size:13px;font-weight:600;margin-bottom:4px}
+.cs{font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:16px;line-height:1.6}
+.chart-wrap{position:relative;height:210px}
+
+/* ── Data Reliability Panel ── */
+.reliability-panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:20px}
+.rp-grid{display:grid;grid-template-columns:1fr 1fr 2fr;gap:16px;align-items:start;margin-top:14px}
+.rp-period{border-radius:6px;padding:14px 16px;border:1px solid}
+.rp-period.issue{background:rgba(156,163,175,.08);border-color:rgba(156,163,175,.4)}
+.rp-period.ok{background:rgba(22,163,74,.05);border-color:rgba(22,163,74,.3)}
+.rp-tag{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.rp-dates{font-size:13px;font-weight:600;margin-bottom:4px}
+.rp-status{font-family:var(--mono);font-size:11px;margin-bottom:8px}
+.rp-desc{font-size:11px;color:var(--text-mid);line-height:1.6}
+.rp-rules{list-style:none;margin-top:8px}
+.rp-rules li{font-family:var(--mono);font-size:10px;color:var(--text-dim);padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:8px}
+.rp-rules li:last-child{border-bottom:none}
+
+/* ── Dataset toggle ── */
+.toggle-bar{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.toggle-label{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:.06em}
+.ds-btn{font-family:var(--mono);font-size:11px;padding:6px 18px;border-radius:4px;border:1px solid var(--border);background:var(--surface);color:var(--text-dim);cursor:pointer;transition:all .15s;letter-spacing:.04em}
+.ds-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.toggle-note{font-family:var(--mono);font-size:10px;color:var(--text-dim);padding:8px 12px;background:var(--surface2);border-radius:4px;line-height:1.7;flex:1;min-width:240px}
+.ds-n{font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:3px}
+.ds-n.warn26{color:var(--warn)}
+
+/* ── Input Panel ── */
+.input-panel{background:var(--surface);border:1px solid rgba(0,168,130,.3);border-radius:10px;padding:26px 28px;margin-bottom:20px}
+.ip-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.ip-title{font-size:15px;font-weight:600;margin-bottom:3px}
+.ip-sub{font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.7}
+.ip-meta{font-family:var(--mono);font-size:11px;color:var(--text-dim);text-align:right}
+.ip-meta span{color:var(--warn)}
+.ip-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:end}
+.ip-field{display:flex;flex-direction:column}
+.ip-trend-btn{display:block;font-family:var(--mono);font-size:10px;padding:5px 8px;border-radius:4px 4px 0 0;text-decoration:none;text-align:center;transition:all .15s;border:1px solid rgba(0,168,130,.35);border-bottom:none;background:rgba(0,168,130,.07);color:var(--accent)}
+.ip-trend-btn:hover{background:rgba(0,168,130,.16);border-color:var(--accent)}
+.ip-trend-btn.twse{border-color:rgba(176,128,0,.4);background:rgba(176,128,0,.06);color:var(--warn)}
+.ip-trend-btn.twse:hover{background:rgba(176,128,0,.14);border-color:var(--warn)}
+.ip-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--text-dim);text-transform:uppercase;padding:6px 0 5px}
+.ip-wrap{position:relative}
+.ip-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:0 0 4px 4px;color:var(--text);font-family:var(--mono);font-size:19px;font-weight:600;padding:11px 13px;outline:none;transition:border-color .2s;-moz-appearance:textfield}
+.ip-input::-webkit-inner-spin-button,.ip-input::-webkit-outer-spin-button{opacity:1}
+.ip-input.c-fund{color:var(--accent)}.ip-input.c-etf{color:var(--accent3)}.ip-input.c-brand{color:var(--accent2)}.ip-input.c-vol{color:var(--warn)}
+.ip-input.c-fund:focus{border-color:var(--accent)}.ip-input.c-etf:focus{border-color:var(--accent3)}.ip-input.c-brand:focus{border-color:var(--accent2)}.ip-input.c-vol:focus{border-color:var(--warn)}
+.ip-unit{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:11px;color:var(--text-dim);pointer-events:none}
+.ip-hint{font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:5px;line-height:1.5}
+/* vol percentile badge */
+.vol-badge{display:none;margin-top:5px;font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:3px;border:1px solid}
+.brand-event{display:none;margin-top:5px;padding:5px 10px;background:rgba(74,114,232,.08);border:1px solid rgba(74,114,232,.3);border-radius:4px;font-family:var(--mono);font-size:10px;color:var(--accent3)}
+.monday-alert{display:none;margin-bottom:18px;padding:11px 15px;background:rgba(176,128,0,.07);border:1px solid rgba(176,128,0,.35);border-radius:6px;font-family:var(--mono);font-size:11px;color:var(--warn);line-height:1.7}
+.ip-reset{font-family:var(--mono);font-size:10px;padding:5px 13px;background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:4px;cursor:pointer;transition:all .2s}
+.ip-reset:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── Demand Score Result ── */
+.score-result{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:18px 22px;margin-top:18px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:20px}
+.score-big{font-family:var(--mono);font-size:60px;font-weight:600;line-height:1}
+.score-denom{font-family:var(--mono);font-size:16px;color:var(--text-dim)}
+.score-pill{display:inline-flex;align-items:center;gap:6px;margin-top:6px;font-family:var(--mono);font-size:12px;padding:4px 14px;border-radius:20px}
+.score-bars{display:flex;flex-direction:column;gap:9px;flex:1}
+.score-bar-row{display:grid;grid-template-columns:90px 1fr 36px 52px 60px;align-items:center;gap:8px}
+.score-bar-name{font-size:12px;color:var(--text-mid)}
+.score-track{background:var(--border);height:5px;border-radius:3px;overflow:hidden}
+.score-fill{height:100%;border-radius:3px;transition:width .5s ease}
+.score-num{font-family:var(--mono);font-size:12px;font-weight:600;text-align:right}
+.score-wt{font-family:var(--mono);font-size:10px;color:var(--text-dim);text-align:right}
+.score-wt-src{font-family:var(--mono);font-size:9px;color:var(--text-dim);padding:1px 5px;border-radius:2px;background:var(--surface);border:1px solid var(--border);text-align:center}
+.score-actions{display:flex;flex-direction:column;gap:8px;min-width:200px}
+.action-box{padding:12px 14px;border-radius:6px;border:1px solid;font-family:var(--mono);font-size:11px;line-height:1.75}
+.score-meta{padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.8}
+
+/* ── Dual Index ── */
+.dual-index{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.di-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px}
+.di-tag{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.di-score{font-family:var(--mono);font-size:40px;font-weight:600;line-height:1;margin-bottom:4px}
+.di-label{font-size:12px;color:var(--text-mid);margin-bottom:10px}
+.di-bars{display:flex;flex-direction:column;gap:7px}
+.di-bar-row{display:grid;grid-template-columns:80px 1fr 34px;align-items:center;gap:8px}
+.di-bar-name{font-size:11px;color:var(--text-mid)}
+.di-track{background:var(--border);height:4px;border-radius:2px;overflow:hidden}
+.di-fill{height:100%;border-radius:2px;transition:width .5s ease}
+.di-num{font-family:var(--mono);font-size:11px;font-weight:600;text-align:right}
+/* quadrant */
+.quadrant{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px;margin-bottom:20px}
+.quad-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.quad-cell{border-radius:6px;padding:13px;border:1px solid}
+.quad-cell.active{border-width:2px}
+.quad-title{font-size:12px;font-weight:600;margin-bottom:4px}
+.quad-desc{font-family:var(--mono);font-size:10px;color:var(--text-mid);line-height:1.6}
+
+/* ── 需求指數歷史對照 ── */
+.odi-hist{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+.oh-cell{border-radius:6px;padding:14px;border:1px solid;text-align:center}
+.oh-range{font-family:var(--mono);font-size:10px;letter-spacing:.04em;margin-bottom:8px}
+.oh-mean{font-family:var(--mono);font-size:24px;font-weight:600;line-height:1;margin-bottom:3px}
+.oh-sub{font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.6}
+.oh-n{font-family:var(--mono);font-size:9px;color:var(--text-dim);margin-top:6px}
+
+/* ── Vol badge ── */
+.vol-level{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:3px;margin-left:6px}
+
+/* ── Correlation bars ── */
+.ci{display:grid;grid-template-columns:110px 1fr 52px 52px;align-items:center;gap:8px;margin-bottom:10px}
+.cn{font-family:var(--mono);font-size:11px;color:var(--text-mid);white-space:nowrap}
+.cb-w{background:var(--surface2);height:6px;border-radius:3px;overflow:hidden}
+.cb{height:100%;border-radius:3px}
+.cv{font-family:var(--mono);font-size:11px;text-align:right;font-weight:600}
+.cv2{font-family:var(--mono);font-size:10px;text-align:right;color:var(--text-dim)}
+.sig{font-family:var(--mono);font-size:9px;padding:1px 4px;border-radius:2px;margin-left:2px}
+.sh{background:rgba(0,168,130,.15);color:var(--accent)}
+.sn{background:rgba(150,155,170,.15);color:var(--text-dim)}
+.corr-col-hdr{font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:.06em;text-align:right;margin-bottom:6px;display:grid;grid-template-columns:110px 1fr 52px 52px;gap:8px}
+
+/* ── Lag table ── */
+.lt{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px}
+.lt th{padding:7px 9px;text-align:center;color:var(--text-dim);font-size:10px;border-bottom:1px solid var(--border)}
+.lt th:first-child{text-align:left}
+.lt td{padding:6px 9px;text-align:center;border-bottom:1px solid var(--border)}
+.lt td:first-child{text-align:left;color:var(--text-mid);font-size:12px}
+.lt tr:last-child td{border-bottom:none}
+.best-lag{border:1px solid var(--warn)!important;color:var(--warn)!important;font-weight:600}
+
+/* ── Brand Timeline ── */
+.brand-timeline{display:flex;flex-direction:column;gap:0}
+.bt-row{display:grid;grid-template-columns:90px 1fr auto;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)}
+.bt-row:last-child{border-bottom:none}
+.bt-date{font-family:var(--mono);font-size:11px;color:var(--text-dim)}
+.bt-event{font-size:12px;color:var(--text)}
+.bt-del{font-family:var(--mono);font-size:10px;color:var(--text-dim);cursor:pointer;padding:2px 6px;border-radius:3px;border:1px solid var(--border);background:none;transition:all .15s}
+.bt-del:hover{border-color:var(--negative);color:var(--negative)}
+.bt-add{display:grid;grid-template-columns:90px 1fr auto;gap:10px;margin-top:12px;align-items:center}
+.bt-input{background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:12px;padding:7px 10px;outline:none;transition:border-color .2s;width:100%}
+.bt-input:focus{border-color:var(--accent3)}
+.bt-addbtn{font-family:var(--mono);font-size:11px;padding:7px 14px;background:var(--accent3);color:#fff;border:none;border-radius:4px;cursor:pointer;white-space:nowrap;transition:opacity .15s}
+.bt-addbtn:hover{opacity:.85}
+.bt-empty{font-family:var(--mono);font-size:11px;color:var(--text-dim);padding:10px 0}
+
+/* ── How-to ── */
+.howto-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.step{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px}
+.step-num{font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:.1em;margin-bottom:6px}
+.step-title{font-size:12px;font-weight:600;margin-bottom:5px}
+.step-body{font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.7}
+.trigger-table{width:100%;border-collapse:collapse}
+.trigger-table th{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim);padding:7px 12px;text-align:left;border-bottom:1px solid var(--border)}
+.trigger-table td{padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:top;line-height:1.6}
+.trigger-table tr:last-child td{border-bottom:none}
+.tag{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:2px}
+
+/* ── Disclaimer ── */
+.disc{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--text-dim);border-radius:8px;padding:20px;margin-bottom:20px}
+.disc h3{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px}
+.disc ul{list-style:none}
+.disc li{font-size:12px;color:var(--text-mid);padding:5px 0;border-bottom:1px solid var(--border);display:grid;grid-template-columns:14px 1fr;gap:8px;line-height:1.7}
+.disc li:last-child{border-bottom:none}
+.roadmap-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.rm-item{font-family:var(--mono);font-size:10px;padding:3px 10px;border-radius:20px;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim)}
+
+/* Leg */
+.leg-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}
+.leg{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--text-mid)}
+.leg-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--border);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:10px;color:var(--text-dim)}
+
+@media(max-width:960px){
+  .g2,.g3,.g21,.dual-index,.score-result,.rp-grid{grid-template-columns:1fr}
+  .g4,.odi-hist,.howto-steps{grid-template-columns:1fr 1fr}
+  .ip-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div>
+    <div class="h-eyebrow">Demand Intelligence · 鉅亨買基金</div>
+    <h1>開戶需求<em>先行指標</em>監測<span class="vtag">v8</span></h1>
+  </div>
+  <div class="h-right">
+    目的：找出廣告以外驅動開戶的需求先行訊號<br>
+    資料期間：2025.08–2026.05（n=304天）<br>
+    廣告效率數字請參考代理商報告
+  </div>
+</header>
+
+<!-- ══ 1. 資料可信度面板 ══ -->
+<div class="sl"><div class="sl-dot" style="background:var(--text-dim)"></div>資料可信度 · Data Reliability</div>
+
+<div class="reliability-panel">
+  <div class="ct">資料可信度說明</div>
+  <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:2px">本資料集存在結構性斷點（Regime Change），兩個時期不屬於同一資料環境，請勿混合解讀。</div>
+  <div class="rp-grid">
+    <div class="rp-period issue">
+      <div class="rp-tag" style="color:var(--issue)">⚠ 歸因異常期</div>
+      <div class="rp-dates">2025/08 – 2025/12</div>
+      <div class="rp-status" style="color:var(--text-dim)">Attribution Issue Period</div>
+      <div class="rp-desc">Google Ads 廣告開戶歸因存在系統性高估，大量日期出現廣告開戶數 &gt; 總開戶數（邏輯上不可能），共 111 天（佔 37%）。</div>
+      <ul class="rp-rules">
+        <li><span>✓</span><span>適合觀察長期趨勢方向</span></li>
+        <li><span>✗</span><span>不適合用於指數權重訓練</span></li>
+        <li><span>✗</span><span>不適合建立開戶預測模型</span></li>
+      </ul>
+    </div>
+    <div class="rp-period ok">
+      <div class="rp-tag" style="color:var(--positive)">✓ 歸因正常期</div>
+      <div class="rp-dates">2026/01 – 2026/05</div>
+      <div class="rp-status" style="color:var(--positive)">Normal Attribution Period</div>
+      <div class="rp-desc">廣告歸因於 2025 年底已完成校準。廣告開戶數與總開戶數邏輯一致，自然開戶可信。</div>
+      <ul class="rp-rules">
+        <li><span>✓</span><span>適合作為決策主要依據</span></li>
+        <li><span>✓</span><span>適合用於指數門檻校正</span></li>
+        <li><span>✓</span><span>自然開戶結構可信</span></li>
+      </ul>
+    </div>
+    <div style="background:var(--surface2);border-radius:6px;padding:16px;border:1px solid var(--border)">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px">歸因異常指標</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="text-align:center;padding:10px;background:var(--surface);border-radius:4px;border:1px solid var(--border)">
+          <div style="font-family:var(--mono);font-size:28px;font-weight:600;color:var(--negative)">111</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">異常天數</div>
+        </div>
+        <div style="text-align:center;padding:10px;background:var(--surface);border-radius:4px;border:1px solid var(--border)">
+          <div style="font-family:var(--mono);font-size:28px;font-weight:600;color:var(--negative)">37%</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">佔全期比例</div>
+        </div>
+        <div style="text-align:center;padding:10px;background:var(--surface);border-radius:4px;border:1px solid var(--border)">
+          <div style="font-family:var(--mono);font-size:28px;font-weight:600;color:var(--warn)">151</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">可信天數（2026）</div>
+        </div>
+        <div style="text-align:center;padding:10px;background:var(--surface);border-radius:4px;border:1px solid var(--border)">
+          <div style="font-family:var(--mono);font-size:28px;font-weight:600;color:var(--positive)">Expert</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">指數權重來源</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.7;padding:8px 10px;background:rgba(176,128,0,.06);border:1px solid rgba(176,128,0,.2);border-radius:4px">
+        ⚠ 現階段使用 Expert Weight v1（專家權重）。<br>
+        Regression / SHAP 權重需待歸因正常資料累積 ≥12 個月後再導入。
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 2. 資料集切換 ══ -->
+<div class="toggle-bar">
+  <span class="toggle-label">資料集選擇：</span>
+  <button class="ds-btn active" id="btn-all" onclick="setDataset('all')">All Data</button>
+  <button class="ds-btn" id="btn-26" onclick="setDataset('26')">2026 Only</button>
+  <div class="toggle-note" id="toggle-note">
+    <strong>All Data</strong>：2025.08–2026.05，n=304天。觀察長期趨勢，但包含 2025 歸因異常期，相關係數受趨勢影響較大。<br>
+    <strong>2026 Only</strong>：2026.01–2026.05，n=151天。排除歸因異常，較適合近期決策與門檻校正。樣本較短，請留意統計穩定性。
+  </div>
+</div>
+
+<!-- ══ 3. 使用說明 ══ -->
+<div class="sl"><div class="sl-dot" style="background:var(--accent)"></div>使用說明</div>
+<div class="card" style="margin-bottom:20px">
+  <div class="ct" style="margin-bottom:14px">📋 每日操作流程（約 5 分鐘）</div>
+  <div class="howto-steps">
+    <div class="step">
+      <div class="step-num">STEP 01 · 開盤前</div>
+      <div class="step-title">查閱昨日 Trends</div>
+      <div class="step-body">點擊各欄位上方按鈕，開啟 Google Trends 近90天頁面，記錄「基金」「ETF」「鉅亨買基金」昨日相對熱度（0–100）。<br><br><span style="color:var(--warn)">Trends 為相對值，跨期比較需謹慎。</span></div>
+    </div>
+    <div class="step">
+      <div class="step-num">STEP 02 · 開盤前</div>
+      <div class="step-title">查閱台股成交量</div>
+      <div class="step-body">點擊 TWSE 按鈕查昨日總成交金額，填入<strong style="color:var(--warn)">億元</strong>（例：8500）。<br><br>系統自動計算目前成交量在歷史資料的百分位位置。</div>
+    </div>
+    <div class="step">
+      <div class="step-num">STEP 03 · 填入數值</div>
+      <div class="step-title">輸入四個數字</div>
+      <div class="step-body">填入昨日四項指標，需求指數與燈號即時更新。<br><br>品牌 Trends 若出現非零值，自動觸發<span style="color:var(--accent3)">品牌事件警示</span>。<br><br><span style="color:var(--warn)">星期一請改填上週五 Trends。</span></div>
+    </div>
+    <div class="step">
+      <div class="step-num">STEP 04 · 判斷行動</div>
+      <div class="step-title">看燈號，做決策</div>
+      <div class="step-body">
+        <span style="color:var(--positive)">🟢 &gt;65：高需求</span>，廣告可積極。<br>
+        <span style="color:var(--warn)">🟡 40–65：中等</span>，維持節奏。<br>
+        <span style="color:var(--negative)">🔴 &lt;40：低需求</span>，保守出價。<br><br>
+        指數反映<strong>未來7天需求方向</strong>，非今日點預測。
+      </div>
+    </div>
+  </div>
+  <div style="padding-top:16px;border-top:1px solid var(--border)">
+    <div style="font-size:12px;font-weight:600;margin-bottom:10px">觸發條件一覽</div>
+    <table class="trigger-table">
+      <tr><th>指標</th><th>觸發門檻</th><th>代表意義</th><th>建議行動</th></tr>
+      <tr><td>基金 Trends</td><td><span class="tag" style="background:rgba(0,168,130,.12);color:var(--accent)">&gt; 70</span></td><td>潛在投資人搜尋需求高漲，Lag 1 r=0.42</td><td>加碼廣告出價</td></tr>
+      <tr><td>ETF Trends</td><td><span class="tag" style="background:rgba(0,168,130,.12);color:var(--accent)">&gt; 65</span></td><td>ETF 搜尋熱度高，適合推 ETF 素材</td><td>強化 ETF 主題</td></tr>
+      <tr><td>台股成交量</td><td><span class="tag" style="background:rgba(176,128,0,.1);color:var(--warn)" id="vol-trigger-tag">動態 P80</span></td><td>市場參與熱度高，高量日開戶顯著提升</td><td>提高出價上限</td></tr>
+      <tr><td>品牌 Trends</td><td><span class="tag" style="background:rgba(74,114,232,.1);color:var(--accent3)">從 0 → 非零</span></td><td>品牌出現外部話題（媒體、KOL、活動）</td><td>追蹤話題來源</td></tr>
+      <tr><td style="color:var(--text-dim)">台股漲跌幅</td><td><span class="tag" style="background:var(--surface2);color:var(--text-dim)">不採用</span></td><td>相關性 r=0.01，無預測力。重要的是「量」非「方向」</td><td>不需關注</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ══ 4. 輸入面板 ══ -->
+<div class="sl"><div class="sl-dot" style="background:var(--warn)"></div>未來7日開戶需求指數 · 輸入昨日數值</div>
+
+<div class="input-panel">
+  <div class="ip-header">
+    <div>
+      <div class="ip-title">輸入昨日觀測值</div>
+      <div class="ip-sub">
+        填入前一日各指標 → 需求指數即時更新 → 評估<strong>未來7天開戶需求強弱</strong><br>
+        依據市場熱度、搜尋需求與品牌訊號，提供需求方向燈號（非開戶數點預測）<br>
+        <span style="color:var(--warn)">本版本以昨日單日訊號推估未來7日需求方向，並非使用過去7日平均值建立模型。</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+      <div class="ip-meta">填表日期：<span id="today-date">—</span></div>
+      <div class="ip-meta">觀測日：<span id="yesterday-date">—</span></div>
+      <button class="ip-reset" onclick="resetInputs()">↺ 重設</button>
+    </div>
+  </div>
+
+  <!-- 週一提示 -->
+  <div class="monday-alert" id="monday-alert">
+    📅 <strong>今日為星期一</strong>：週末 Trends 搜尋量結構性偏低（工作日均值約 72，週末約 38），不反映真實投資需求。Trends 三欄建議填入<strong>上週五</strong>數值；台股成交量非交易日填 0。
+  </div>
+
+  <div class="ip-grid">
+    <!-- 基金 Trends -->
+    <div class="ip-field">
+      <a href="https://trends.google.com.tw/trends/explore?q=%E5%9F%BA%E9%87%91&geo=TW&date=today+3-m" target="_blank" class="ip-trend-btn">📈 基金 Trends 近90天 ↗</a>
+      <div class="ip-lbl" id="lbl-fund">昨日數值（0–100）</div>
+      <div class="ip-wrap"><input type="number" class="ip-input c-fund" id="v-fund" min="0" max="100" value="74" oninput="calcScore()"></div>
+      <div class="ip-hint">搜尋詞：基金 / 買基金<br>全期均值 63，觸發門檻 &gt;70</div>
+    </div>
+    <!-- ETF Trends -->
+    <div class="ip-field">
+      <a href="https://trends.google.com.tw/trends/explore?q=ETF&geo=TW&date=today+3-m" target="_blank" class="ip-trend-btn">🏦 ETF Trends 近90天 ↗</a>
+      <div class="ip-lbl" id="lbl-etf">昨日數值（0–100）</div>
+      <div class="ip-wrap"><input type="number" class="ip-input c-etf" id="v-etf" min="0" max="100" value="59" oninput="calcScore()"></div>
+      <div class="ip-hint">搜尋詞：ETF / 台灣ETF<br>全期均值 63，觸發門檻 &gt;65</div>
+    </div>
+    <!-- 品牌 Trends -->
+    <div class="ip-field">
+      <a href="https://trends.google.com.tw/trends/explore?q=%E9%89%85%E4%BA%A8%E8%B2%B7%E5%9F%BA%E9%87%91&geo=TW&date=today+3-m" target="_blank" class="ip-trend-btn">🎯 品牌 Trends 近90天 ↗</a>
+      <div class="ip-lbl" id="lbl-brand">昨日數值（0–100）</div>
+      <div class="ip-wrap"><input type="number" class="ip-input c-brand" id="v-brand" min="0" max="100" value="0" oninput="calcScore()"></div>
+      <div class="ip-hint">搜尋詞：鉅亨買基金<br>70% 日期為 0，非零即品牌事件</div>
+      <div class="brand-event" id="brand-event">🔔 品牌事件偵測：昨日出現搜尋量，建議追蹤媒體 / KOL 來源</div>
+    </div>
+    <!-- 成交量 -->
+    <div class="ip-field">
+      <a href="https://www.twse.com.tw/zh/trading/historical/fmtqik.html" target="_blank" class="ip-trend-btn twse">💹 TWSE 查昨日成交量 ↗</a>
+      <div class="ip-lbl" id="lbl-vol">昨日台股成交量</div>
+      <div class="ip-wrap">
+        <input type="number" class="ip-input c-vol" id="v-vol" min="0" max="30000" step="100" value="13168" oninput="calcScore()">
+        <span class="ip-unit">億元</span>
+      </div>
+      <div class="ip-hint">填入億元數值（例：8500）<br><span id="vol-hint-dynamic">動態百分位計算中…</span></div>
+      <div class="vol-badge" id="vol-badge"></div>
+    </div>
+  </div>
+
+  <!-- 需求指數結果 -->
+  <div class="score-result">
+    <div style="text-align:center;min-width:120px">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:.08em;margin-bottom:4px">未來7日需求指數</div>
+      <div><span class="score-big" id="score-num">—</span><span class="score-denom">/100</span></div>
+      <div id="score-pill"></div>
+    </div>
+    <div class="score-bars">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:.06em;margin-bottom:2px;display:flex;justify-content:space-between"><span>指數分解</span><span style="color:rgba(176,128,0,.8)">Expert Weight v1</span></div>
+      <div class="score-bar-row">
+        <div class="score-bar-name">基金 Trends</div>
+        <div class="score-track"><div class="score-fill" id="bar-fund" style="background:var(--accent)"></div></div>
+        <div class="score-num" id="num-fund" style="color:var(--accent)">—</div>
+        <div class="score-wt">45%</div>
+        <div class="score-wt-src">Expert</div>
+      </div>
+      <div class="score-bar-row">
+        <div class="score-bar-name">ETF Trends</div>
+        <div class="score-track"><div class="score-fill" id="bar-etf" style="background:var(--accent3)"></div></div>
+        <div class="score-num" id="num-etf" style="color:var(--accent3)">—</div>
+        <div class="score-wt">30%</div>
+        <div class="score-wt-src">Expert</div>
+      </div>
+      <div class="score-bar-row">
+        <div class="score-bar-name">台股成交量</div>
+        <div class="score-track"><div class="score-fill" id="bar-vol" style="background:var(--warn)"></div></div>
+        <div class="score-num" id="num-vol" style="color:var(--warn)">—</div>
+        <div class="score-wt">20%</div>
+        <div class="score-wt-src">Expert</div>
+      </div>
+      <div class="score-bar-row">
+        <div class="score-bar-name">品牌 Trends</div>
+        <div class="score-track"><div class="score-fill" id="bar-brand" style="background:var(--accent2)"></div></div>
+        <div class="score-num" id="num-brand" style="color:var(--accent2)">—</div>
+        <div class="score-wt">5%</div>
+        <div class="score-wt-src">Expert</div>
+      </div>
+    </div>
+    <div class="score-actions">
+      <div id="action-box" class="action-box"></div>
+      <div class="score-meta" id="score-meta"></div>
+      <button id="save-btn" onclick="saveToday()"
+        style="width:100%;font-family:var(--mono);font-size:11px;padding:9px 0;
+               background:var(--accent);color:#fff;border:none;border-radius:4px;
+               cursor:pointer;transition:opacity .15s;letter-spacing:.04em;margin-top:4px">
+        💾 記錄今日數據
+      </button>
+      <div id="save-status" style="font-family:var(--mono);font-size:10px;text-align:center;
+           margin-top:5px;min-height:16px;color:var(--text-dim)"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 5. 雙指數 ══ -->
+<div class="sl"><div class="sl-dot" style="background:var(--accent3)"></div>雙指數架構 · 市場需求 vs 品牌需求</div>
+<div class="dual-index">
+  <div class="di-card" style="border-color:rgba(0,168,130,.3)">
+    <div class="di-tag" style="color:var(--accent)"><div style="width:6px;height:6px;border-radius:50%;background:var(--accent)"></div>市場需求分數 Market Demand</div>
+    <div><span class="di-score" id="mds-score" style="color:var(--accent)">—</span><span style="font-family:var(--mono);font-size:16px;color:var(--text-dim)">/100</span></div>
+    <div class="di-label">基金 Trends + ETF Trends + 台股成交量</div>
+    <div class="di-bars">
+      <div class="di-bar-row"><div class="di-bar-name">基金</div><div class="di-track"><div class="di-fill" id="mds-fund" style="background:var(--accent)"></div></div><div class="di-num" id="mds-fund-n" style="color:var(--accent)">—</div></div>
+      <div class="di-bar-row"><div class="di-bar-name">ETF</div><div class="di-track"><div class="di-fill" id="mds-etf" style="background:var(--accent3)"></div></div><div class="di-num" id="mds-etf-n" style="color:var(--accent3)">—</div></div>
+      <div class="di-bar-row"><div class="di-bar-name">台股量</div><div class="di-track"><div class="di-fill" id="mds-vol" style="background:var(--warn)"></div></div><div class="di-num" id="mds-vol-n" style="color:var(--warn)">—</div></div>
+    </div>
+  </div>
+  <div class="di-card" style="border-color:rgba(74,114,232,.3)">
+    <div class="di-tag" style="color:var(--accent3)"><div style="width:6px;height:6px;border-radius:50%;background:var(--accent3)"></div>品牌需求分數 Brand Demand</div>
+    <div><span class="di-score" id="bds-score" style="color:var(--accent3)">—</span><span style="font-family:var(--mono);font-size:16px;color:var(--text-dim)">/100</span></div>
+    <div class="di-label">品牌 Trends（70% 日期為 0，非零即為事件訊號）</div>
+    <div class="di-bars">
+      <div class="di-bar-row"><div class="di-bar-name">品牌</div><div class="di-track"><div class="di-fill" id="bds-brand" style="background:var(--accent2)"></div></div><div class="di-num" id="bds-brand-n" style="color:var(--accent2)">—</div></div>
+    </div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:10px;line-height:1.7">品牌需求分數在多數日期為 0，是正常現象。<br>非零值表示品牌有外部話題，請追蹤來源。</div>
+  </div>
+</div>
+
+<!-- 四象限判讀 -->
+<div class="quadrant">
+  <div class="ct">四象限判讀</div>
+  <div class="cs">依當日市場需求分數（&gt;/&lt;50）與品牌需求分數（&gt;/&lt;10）組合，判斷需求結構。目前判讀：<strong id="quadrant-label">—</strong></div>
+  <div class="quad-grid">
+    <div class="quad-cell" id="q-hh" style="border-color:rgba(0,168,130,.3);background:rgba(0,168,130,.04)">
+      <div class="quad-title" style="color:var(--positive)">🔥 市場熱 ＋ 品牌熱</div>
+      <div class="quad-desc">需求高峰。市場在找投資工具，品牌也有話題加持。廣告出價可積極，轉換率預計最高。</div>
+    </div>
+    <div class="quad-cell" id="q-hl" style="border-color:rgba(176,128,0,.3);background:rgba(176,128,0,.04)">
+      <div class="quad-title" style="color:var(--warn)">📈 市場熱 ＋ 品牌弱</div>
+      <div class="quad-desc">需求存在但品牌承接不足。市場有投資意願，但品牌曝光度低。適合加強品牌素材投放。</div>
+    </div>
+    <div class="quad-cell" id="q-lh" style="border-color:rgba(74,114,232,.3);background:rgba(74,114,232,.04)">
+      <div class="quad-title" style="color:var(--accent3)">🎯 市場冷 ＋ 品牌熱</div>
+      <div class="quad-desc">品牌活動效果顯現，但整體市場需求偏低。可觀察品牌話題能否帶動搜尋轉換。</div>
+    </div>
+    <div class="quad-cell" id="q-ll" style="border-color:var(--border);background:var(--surface2)">
+      <div class="quad-title" style="color:var(--text-dim)">😴 市場冷 ＋ 品牌弱</div>
+      <div class="quad-desc">低需求期。廣告加碼效益有限，建議保守出價，改以測試型素材為主。</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 6. 需求指數歷史對照 ══ -->
+<div class="sl"><div class="sl-dot" style="background:var(--accent)"></div>需求指數歷史對照 · 各分數區間對應開戶分布</div>
+<div class="card" style="margin-bottom:20px">
+  <div class="ct">各需求指數區間的實際開戶數（歷史對照）</div>
+  <div class="cs" id="hist-subtitle">依需求指數分四區間，顯示各區間歷史日均開戶數。目前使用 <strong>All Data</strong> 資料集。</div>
+  <div class="odi-hist" id="odi-hist-cells"></div>
+  <div style="margin-top:12px;font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.7;padding:8px 12px;background:var(--surface2);border-radius:4px">
+    ⚠ 此為相關性對照，不是預測模型。「需求指數高」時開戶高，可能來自共同的市場環境因素，非直接因果。樣本數較少的區間（n &lt; 20）請謹慎解讀。
+  </div>
+</div>
+
+<!-- ══ 7. 圖表區 ══ -->
+<div class="sl"><div class="sl-dot" style="background:var(--text-dim)"></div>歷史趨勢 · 含異常期標示</div>
+<div class="g2">
+  <div class="card">
+    <div class="ct">需求指數 vs 日均開戶（月度）</div>
+    <div class="cs">灰底 = 2025 歸因異常期，數字請保留解讀空間。</div>
+    <div class="chart-wrap"><canvas id="odiChart"></canvas></div>
+    <div class="leg-row">
+      <div class="leg"><div class="leg-dot" style="background:#4a72e8"></div>需求指數（左軸）</div>
+      <div class="leg"><div class="leg-dot" style="background:#00a882"></div>日均開戶（右軸）</div>
+      <div class="leg"><div class="leg-dot" style="background:rgba(150,160,175,.25);border:1px solid #ccc"></div>歸因異常期</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">自然開戶 vs 廣告開戶（月度）</div>
+    <div class="cs">灰底 = 2025 歸因異常期，廣告開戶數有系統性高估，不可與 2026 直接比較。</div>
+    <div class="chart-wrap"><canvas id="structChart"></canvas></div>
+    <div class="leg-row">
+      <div class="leg"><div class="leg-dot" style="background:rgba(0,168,130,.75)"></div>自然開戶</div>
+      <div class="leg"><div class="leg-dot" style="background:rgba(224,85,32,.55)"></div>廣告開戶</div>
+    </div>
+  </div>
+</div>
+<div class="g2">
+  <div class="card">
+    <div class="ct">日均開戶月度趨勢</div>
+    <div class="cs">長期趨勢主導（r=0.70 vs 時間）。灰底為歸因異常期。</div>
+    <div class="chart-wrap"><canvas id="totalChart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="ct">星期效應</div>
+    <div class="cs">週五均開戶最高（165戶），週末明顯下滑。週一請用上週五 Trends。</div>
+    <div class="chart-wrap"><canvas id="wdChart"></canvas></div>
+  </div>
+</div>
+
+<!-- ══ 8. 相關性分析 ══ -->
+<div class="sl"><div class="sl-dot" style="background:var(--text-dim)"></div>Correlation Analysis：短期波動 vs 長期共振 <span id="corr-dataset-label" style="font-size:10px;color:var(--accent);margin-left:4px">· All Data</span></div>
+<div class="g2">
+  <div class="card">
+    <div class="ct">Correlation Analysis — 短期波動 vs 長期共振</div>
+    <div class="cs">左欄 Detrended：去除長期趨勢後，解釋短期日間波動的真實訊號。右欄 Raw：未去趨勢，反映指標與開戶的長期共振（含趨勢影響）。台股成交量 Raw r=0.76 但去趨勢後降為 0.42，差距說明趨勢主導性強。</div>
+    <div class="corr-col-hdr"><span></span><span></span><span>Detrended</span><span>Raw</span></div>
+    <div id="corr-rows"></div>
+  </div>
+  <div class="card">
+    <div class="ct">Lag 分析 — 最佳領先天數（Detrended，排除 Lag 0）</div>
+    <div class="cs">Lag 0 = 同日相關，僅供參考，不列入最佳領先判斷。最佳領先 Lag 從 Lag1–Lag10 中選取（黃框標示）。<br>例外：台股成交量反映同日市場熱度，Lag 0 具備決策參考性，另行標注。</div>
+    <div style="overflow-x:auto"><table class="lt"><thead><tr><th>指標</th><th>Lag0</th><th>Lag1</th><th>Lag3</th><th>Lag5</th><th>Lag7</th><th>Lag10</th><th style="color:var(--warn)">最佳</th></tr></thead><tbody id="lag-tbody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- ══ 每日記錄歷史 ══ -->
+<div class="sl"><div class="sl-dot" style="background:var(--positive)"></div>每日需求記錄 · 歷史數據</div>
+<div class="card" style="margin-bottom:20px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+    <div>
+      <div class="ct" style="margin-bottom:2px">歷史需求日誌</div>
+      <div class="cs" style="margin-bottom:0">每次填表後按「記錄今日數據」即自動存入。顯示最近 <span id="history-limit">30</span> 筆。</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <select id="history-limit-select" onchange="changeHistoryLimit(this.value)"
+        style="font-family:var(--mono);font-size:11px;padding:5px 10px;
+               background:var(--surface2);border:1px solid var(--border);
+               border-radius:4px;color:var(--text);outline:none">
+        <option value="30">近30筆</option>
+        <option value="60">近60筆</option>
+        <option value="90">近90筆</option>
+        <option value="999">全部</option>
+      </select>
+      <button onclick="loadHistory()"
+        style="font-family:var(--mono);font-size:11px;padding:5px 14px;
+               background:transparent;border:1px solid var(--border);
+               color:var(--text-dim);border-radius:4px;cursor:pointer;transition:all .2s"
+        onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">
+        ↻ 重新載入
+      </button>
+    </div>
+  </div>
+  <div id="history-status" style="font-family:var(--mono);font-size:11px;
+       color:var(--text-dim);padding:8px 0;min-height:20px"></div>
+  <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px" id="history-table">
+      <thead>
+        <tr style="border-bottom:2px solid var(--border)">
+          <th style="padding:8px 10px;text-align:left;color:var(--text-dim);font-size:10px;white-space:nowrap">日期</th>
+          <th style="padding:8px 10px;text-align:left;color:var(--text-dim);font-size:10px">星期</th>
+          <th style="padding:8px 10px;text-align:center;color:var(--accent);font-size:10px">需求指數</th>
+          <th style="padding:8px 10px;text-align:center;color:var(--text-dim);font-size:10px">燈號</th>
+          <th style="padding:8px 10px;text-align:center;color:var(--accent);font-size:10px">基金T</th>
+          <th style="padding:8px 10px;text-align:center;color:var(--accent3);font-size:10px">ETF T</th>
+          <th style="padding:8px 10px;text-align:center;color:var(--accent2);font-size:10px">品牌T</th>
+          <th style="padding:8px 10px;text-align:center;color:var(--warn);font-size:10px">成交量(億)</th>
+          <th style="padding:8px 10px;text-align:left;color:var(--text-dim);font-size:10px">四象限</th>
+          <th style="padding:8px 10px;text-align:left;color:var(--text-dim);font-size:10px">備注</th>
+        </tr>
+      </thead>
+      <tbody id="history-tbody">
+        <tr><td colspan="10" style="padding:16px 10px;color:var(--text-dim);text-align:center">
+          載入中…
+        </td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ 9. 品牌事件 Timeline ══ -->
+<div class="sl"><div class="sl-dot" style="background:var(--accent3)"></div>品牌事件紀錄 · Brand Event Timeline</div>
+<div class="card" style="margin-bottom:20px">
+  <div class="ct">品牌事件紀錄</div>
+  <div class="cs">記錄品牌 Trends 出現非零值時的對應事件來源，協助辨識品牌搜尋來源。</div>
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(176,128,0,.07);border:1px solid rgba(176,128,0,.3);border-radius:6px;margin-bottom:16px;font-family:var(--mono);font-size:11px;color:var(--warn)">⚠ 事件資料僅存在瀏覽器記憶體，重新整理頁面後將消失。正式線上版需串接 Google Sheets、Firebase 或其他資料庫後才能持久儲存。</div>
+  <div class="brand-timeline" id="brand-timeline"></div>
+  <div class="bt-add">
+    <input type="date" class="bt-input" id="bt-date">
+    <input type="text" class="bt-input" id="bt-event" placeholder="事件說明（例：市場先生發文、TVC上線）">
+    <button class="bt-addbtn" onclick="addBrandEvent()">＋ 新增</button>
+  </div>
+  <div id="event-save-status" style="font-family:var(--mono);font-size:10px;
+       color:var(--text-dim);margin-top:8px;min-height:16px"></div>
+</div>
+
+<!-- ══ 10. 限制說明 ══ -->
+<div class="sl"><div class="sl-dot" style="background:var(--text-dim)"></div>使用限制與 Future Roadmap</div>
+<div class="g2">
+  <div class="disc">
+    <h3>使用前請閱讀</h3>
+    <ul>
+      <li><span>①</span><span>本儀表板<strong>不提供開戶數點預測</strong>。需求指數是方向性燈號，「未來7天需求強弱」≠「明天會開幾戶」。</span></li>
+      <li><span>②</span><span><strong>2025年資料含歸因異常</strong>（廣告開戶浮報），不適合用於模型訓練。所有圖表已標示異常期，請留意灰底區域。</span></li>
+      <li><span>③</span><span><strong>Google Trends 為相對值（0–100）</strong>，同一時期內比較才有意義，跨時期絕對數字不可比。</span></li>
+      <li><span>④</span><span><strong>品牌 Trends 70% 為 0</strong>，非零才有意義。品牌需求分數在多數日子接近 0 是正常現象，不代表品牌無效。</span></li>
+      <li><span>⑤</span><span><strong>指數權重為 Expert Weight v1</strong>（人工設定），尚未以統計方法驗證。待 2026 年資料累積 ≥12 個月後再導入 Regression Weight。</span></li>
+      <li><span>⑥</span><span><strong>相關性 ≠ 因果</strong>。指標與開戶數的同步變動，可能來自共同的市場環境因素（牛市、季節性），而非直接因果。</span></li>
+      <li><span>⑦</span><span><strong>模型需每季重新校正</strong>。百分位門檻與正規化參數基於現有資料，市場結構改變後會偏移。</span></li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="ct" style="margin-bottom:12px">Future Roadmap</div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:8px">以下功能暫緩，待條件成熟後導入：</div>
+    <div class="roadmap-list">
+      <span class="rm-item">Regression Weight</span>
+      <span class="rm-item">Feature Importance</span>
+      <span class="rm-item">SHAP Analysis</span>
+      <span class="rm-item">Accounts Forecast Model</span>
+      <span class="rm-item">Rolling Validation</span>
+      <span class="rm-item">需求指數回測 Backtest</span>
+      <span class="rm-item">品牌事件持久化儲存</span>
+      <span class="rm-item">線上版資料庫</span>
+    </div>
+    <div style="margin-top:14px;font-family:var(--mono);font-size:10px;color:var(--text-dim);padding:10px 12px;background:var(--surface2);border-radius:4px;line-height:1.8;border:1px solid var(--border)">
+      啟動 Regression Weight 條件：<br>
+      · 歸因正常資料 ≥ 12 個月（預計 2026/12 後）<br>
+      · 廣告開戶數邏輯驗證通過<br>
+      · 樣本涵蓋不同市場情境
+    </div>
+  </div>
+</div>
+
+<!-- ══ B. 資料架構 ══ -->
+<div class="sl"><div class="sl-dot" style="background:var(--accent3)"></div>Data Collection Framework · 長期資料架構建議</div>
+<div class="card" style="margin-bottom:20px">
+  <div class="ct">未來模型升級所需資料欄位清單</div>
+  <div class="cs">此區塊為資料蒐集指引，非功能頁。建議每日記錄以下欄位，累積至 ≥12 個月正常歸因資料後，方可啟動 Regression Weight 與預測模型開發。</div>
+  <div style="overflow-x:auto">
+  <table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px">
+    <thead><tr style="border-bottom:2px solid var(--border)">
+      <th style="padding:8px 12px;text-align:left;color:var(--text-dim);font-size:10px;letter-spacing:.06em">分類</th>
+      <th style="padding:8px 12px;text-align:left;color:var(--text-dim);font-size:10px;letter-spacing:.06em">欄位名稱</th>
+      <th style="padding:8px 12px;text-align:left;color:var(--text-dim);font-size:10px;letter-spacing:.06em">說明</th>
+      <th style="padding:8px 12px;text-align:left;color:var(--text-dim);font-size:10px;letter-spacing:.06em">優先級</th>
+    </tr></thead>
+    <tbody>
+    <tr style="background:rgba(0,168,130,.04)"><td style="padding:7px 12px;border-bottom:1px solid var(--border);font-weight:600;color:var(--accent)" colspan="4">基礎識別</td></tr>
+    <tr><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-dim)">基礎</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)">日期</td><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-mid)">YYYY-MM-DD</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)"><span style="background:rgba(220,38,38,.1);color:var(--negative);padding:1px 7px;border-radius:2px">必填</span></td></tr>
+    <tr><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-dim)">基礎</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)">星期</td><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-mid)">Mon–Sun，用於週末效應分析</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)"><span style="background:rgba(220,38,38,.1);color:var(--negative);padding:1px 7px;border-radius:2px">必填</span></td></tr>
+    <tr style="background:rgba(0,168,130,.04)"><td style="padding:7px 12px;border-bottom:1px solid var(--border);font-weight:600;color:var(--accent)" colspan="4">開戶結果（Outcome）</td></tr>
+    <tr><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-dim)">結果</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)">總開戶數</td><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-mid)">當日新開立帳戶總數</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)"><span style="background:rgba(220,38,38,.1);color:var(--negative);padding:1px 7px;border-radius:2px">必填</span></td></tr>
+    <tr><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-dim)">結果</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)">廣告歸因開戶數</td><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-mid)">廣告後台歸因開戶（需確認歸因口徑）</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)"><span style="background:rgba(220,38,38,.1);color:var(--negative);padding:1px 7px;border-radius:2px">必填</span></td></tr>
+    <tr><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-dim)">結果</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)">自然開戶數</td><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-mid)">總開戶數 − 廣告歸因開戶數</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)"><span style="background:rgba(220,38,38,.1);color:var(--negative);padding:1px 7px;border-radius:2px">必填</span></td></tr>
+    <tr style="background:rgba(74,114,232,.04)"><td style="padding:7px 12px;border-bottom:1px solid var(--border);font-weight:600;color:var(--accent3)" colspan="4">廣告投放（Marketing）</td></tr>
+    <tr><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-dim)">廣告</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)">Google Clicks / Spend</td><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-mid)">Google Ads 當日點擊數與花費（NT$）</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)"><span style="background:rgba(220,38,38,.1);color:var(--negative);padding:1px 7px;border-radius:2px">必填</span></td></tr>
+    <tr><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-dim)">廣告</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)">Meta Clicks / Spend</td><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-mid)">Meta Ads 當日點擊數與花費（NT$）</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)"><span style="background:rgba(220,38,38,.1);color:var(--negative);padding:1px 7px;border-radius:2px">必填</span></td></tr>
+    <tr style="background:rgba(0,168,130,.04)"><td style="padding:7px 12px;border-bottom:1px solid var(--border);font-weight:600;color:var(--accent)" colspan="4">需求訊號（Demand）</td></tr>
+    <tr><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-dim)">需求</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)">基金 Trends</td><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-mid)">Google Trends 相對熱度（0–100），搜尋詞「基金」</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)"><span style="background:rgba(220,38,38,.1);color:var(--negative);padding:1px 7px;border-radius:2px">必填</span></td></tr>
+    <tr><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-dim)">需求</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)">ETF Trends</td><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-mid)">Google Trends 相對熱度（0–100），搜尋詞「ETF」</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)"><span style="background:rgba(220,38,38,.1);color:var(--negative);padding:1px 7px;border-radius:2px">必填</span></td></tr>
+    <tr><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-dim)">需求</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)">品牌 Trends</td><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-mid)">Google Trends 相對熱度（0–100），搜尋詞「鉅亨買基金」</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)"><span style="background:rgba(220,38,38,.1);color:var(--negative);padding:1px 7px;border-radius:2px">必填</span></td></tr>
+    <tr style="background:rgba(176,128,0,.04)"><td style="padding:7px 12px;border-bottom:1px solid var(--border);font-weight:600;color:var(--warn)" colspan="4">市場環境（Market）</td></tr>
+    <tr><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-dim)">市場</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)">台股成交量</td><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-mid)">當日台股總成交金額（億元）</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)"><span style="background:rgba(220,38,38,.1);color:var(--negative);padding:1px 7px;border-radius:2px">必填</span></td></tr>
+    <tr><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-dim)">市場</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)">台股漲跌幅</td><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-mid)">當日加權指數漲跌幅（%）</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)"><span style="background:rgba(176,128,0,.12);color:var(--warn);padding:1px 7px;border-radius:2px">選填</span></td></tr>
+    <tr style="background:rgba(74,114,232,.04)"><td style="padding:7px 12px;border-bottom:1px solid var(--border);font-weight:600;color:var(--accent3)" colspan="4">品質與標記（Quality）</td></tr>
+    <tr><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-dim)">標記</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)">品牌事件註記</td><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-mid)">當日品牌重大曝光事件（媒體報導、KOL、活動）</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)"><span style="background:rgba(176,128,0,.12);color:var(--warn);padding:1px 7px;border-radius:2px">選填</span></td></tr>
+    <tr><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-dim)">標記</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)">重大市場事件</td><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-mid)">政策異動、台股重大波動、節假日等</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)"><span style="background:rgba(176,128,0,.12);color:var(--warn);padding:1px 7px;border-radius:2px">選填</span></td></tr>
+    <tr><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-dim)">標記</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)">資料可信度標記</td><td style="padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text-mid)">Normal / AttributionIssue / Missing</td><td style="padding:6px 12px;border-bottom:1px solid var(--border)"><span style="background:rgba(220,38,38,.1);color:var(--negative);padding:1px 7px;border-radius:2px">必填</span></td></tr>
+    <tr><td style="padding:6px 12px;color:var(--text-dim)">標記</td><td style="padding:6px 12px">歸因異常標記</td><td style="padding:6px 12px;color:var(--text-mid)">布林值，標記廣告開戶數是否超過總開戶數</td><td style="padding:6px 12px"><span style="background:rgba(220,38,38,.1);color:var(--negative);padding:1px 7px;border-radius:2px">必填</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ══ C. Monthly Review ══ -->
+<div class="sl"><div class="sl-dot" style="background:var(--positive)"></div>Monthly Review Checklist · 每月模型維護</div>
+<div class="card" style="margin-bottom:20px">
+  <div class="ct">每月應執行的模型健康檢查</div>
+  <div class="cs">建議每月末執行一次。任何項目出現異常，應更新正規化參數或調整門檻值後再繼續使用。</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" id="checklist-grid">
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:.08em;margin-bottom:10px">需求指數表現</div>
+      <label style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--accent)"><span style="font-size:12px">需求指數 > 80 的開戶表現是否仍顯著高於其他區間？若差距縮小，考慮調整權重。</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--accent)"><span style="font-size:12px">ETF Trends 與開戶相關性是否維持在 r > 0.3？若下滑，重新計算 Detrended Correlation。</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--accent)"><span style="font-size:12px">基金 Trends 是否仍為相關性最高的核心訊號？若被其他指標超越，記錄並追蹤原因。</span></label>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--warn);letter-spacing:.08em;margin-bottom:10px">門檻與樣本</div>
+      <label style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--warn)"><span style="font-size:12px">成交量 P20 / P80 是否漂移？若近3個月均值高於歷史 P80，應更新百分位基準。</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--warn)"><span style="font-size:12px">品牌 Trends 非零事件是否增加？若每月非零天數 > 10，品牌指數的基準值需重新校正。</span></label>
+      <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer"><input type="checkbox" style="margin-top:3px;accent-color:var(--warn)"><span style="font-size:12px">需求指數各區間樣本數是否充足？若 > 80 區間 n < 15，歷史對照表格可信度標示為「低」。</span></label>
+    </div>
+  </div>
+  <div style="margin-top:12px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.8">
+    檢查表僅存於瀏覽器，勾選狀態重整後消失。線上版將支援每月勾選記錄持久化。
+  </div>
+</div>
+
+<!-- ══ D. v8 Roadmap ══ -->
+<div class="sl"><div class="sl-dot" style="background:var(--accent2)"></div>Future Model Evolution · v8 Roadmap</div>
+<div class="card" style="margin-bottom:20px">
+  <div class="ct">模型演進路徑</div>
+  <div class="cs">核心原則：本工具定位為「需求監測工具」，不是「開戶數預測工具」。各階段升級均以此為前提。</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+    <div style="border:1px solid rgba(0,168,130,.4);border-radius:8px;padding:18px;background:rgba(0,168,130,.04)">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:.1em;margin-bottom:8px">階段一 · 目前</div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--accent)">Demand Monitoring</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-mid);line-height:1.9">
+        ✓ Expert Weight v1<br>
+        ✓ 需求燈號（高/中/低）<br>
+        ✓ 市場熱度監測<br>
+        ✓ 品牌事件偵測<br>
+        ✓ 資料可信度分層
+      </div>
+      <div style="margin-top:10px;font-family:var(--mono);font-size:10px;padding:6px 10px;background:rgba(0,168,130,.1);border-radius:3px;color:var(--accent)">狀態：✓ 運行中</div>
+    </div>
+    <div style="border:1px solid rgba(176,128,0,.4);border-radius:8px;padding:18px;background:rgba(176,128,0,.04)">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--warn);letter-spacing:.1em;margin-bottom:8px">階段二 · 2026年底後</div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--warn)">Statistical Weighting</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-mid);line-height:1.9">
+        ○ Regression Weight<br>
+        ○ Feature Importance<br>
+        ○ SHAP Analysis<br>
+        ○ 需求指數回測驗證<br>
+        ○ 指標相關性定期更新
+      </div>
+      <div style="margin-top:10px;font-family:var(--mono);font-size:10px;padding:6px 10px;background:rgba(176,128,0,.1);border-radius:3px;color:var(--warn)">條件：正常歸因資料 ≥ 12 個月</div>
+    </div>
+    <div style="border:1px solid rgba(150,160,175,.4);border-radius:8px;padding:18px;background:rgba(150,160,175,.04)">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:.1em;margin-bottom:8px">階段三 · 未來</div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text-mid)">Forecast Model</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-mid);line-height:1.9">
+        ○ Accounts Forecast Model<br>
+        ○ Rolling Validation<br>
+        ○ R² / MAE / MAPE / RMSE<br>
+        ○ 需求 → 開戶 因果驗證<br>
+        ○ 需求形成路徑圖
+      </div>
+      <div style="margin-top:10px;font-family:var(--mono);font-size:10px;padding:6px 10px;background:rgba(150,160,175,.1);border-radius:3px;color:var(--text-dim)">條件：資料品質穩定 · 樣本涵蓋完整市場循環</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span>ANUE FUND PLATFORM · 開戶需求先行指標監測 v8 · INTERNAL USE ONLY</span>
+  <span>n=304天 · 2025.08–2026.05 · Expert Weight v1 · 台股成交量單位：億元</span>
+</footer>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════
+// 線上版設定：部署 Apps Script 後，將 Web App 網址貼在下方
+// 範例：'https://script.google.com/macros/s/AKfy.../exec'
+// 本機測試時留空，功能仍可正常運作（記錄功能停用）
+// ════════════════════════════════════════════════════
+const API_URL = 'https://script.google.com/macros/s/AKfycbwGpwiq19FYYfr3ogatM0JqE8awSct4jAeMe4PqozevC5ayFcs4kw00ayWUs06nJiESjg/   // ← 填入 Apps Script Web App 網址
+
+const MONO = "'IBM Plex Mono',monospace";
+Chart.defaults.font.family = MONO;
+Chart.defaults.color = '#7a8094';
+const TT = {backgroundColor:'#fff',borderColor:'#dde0e8',borderWidth:1,titleFont:{family:MONO,size:11},bodyFont:{family:MONO,size:12},titleColor:'#1a1d24',bodyColor:'#4a5068'};
+const GRID = {color:'rgba(180,185,200,.4)'};
+const MOS = ['2025-08','2025-09','2025-10','2025-11','2025-12','2026-01','2026-02','2026-03','2026-04','2026-05'];
+
+// ══ 預先計算好的兩套統計數字 ══
+const STATS = {
+  all: {
+    n: 304,
+    norm: { fund:{lo:28.1,hi:94.0}, etf:{lo:33.0,hi:90.0}, vol:{lo:4260,hi:12784}, brand:{lo:0,hi:84.0} },
+    vol_p20: 4752, vol_p80: 9329,
+    corr_raw:      { fund:0.288, etf:0.097, brand:0.478, vol:0.759, pct:0.072 },
+    corr_dt:       { fund:0.458, etf:0.422, brand:0.326, vol:0.417, pct:0.011 },
+    lag: {
+      fund:  [0.458,0.418,0.251,0.158,0.322,0.125],
+      etf:   [0.422,0.379,0.166,0.051,0.144,-0.067],
+      brand: [0.326,0.317,0.175,0.147,0.196,0.032],
+      vol:   [0.410,0.332,0.197,0.196,0.166,-0.005],
+    },
+    hist: [
+      {range:'>80',   mean:406, median:424, p25:384, p75:458, n:19,  color:'var(--positive)', conf:'Medium'},
+      {range:'60–80', mean:140, median:92,  p25:73,  p75:183, n:88,  color:'var(--accent)',   conf:'High'},
+      {range:'40–60', mean:154, median:122, p25:94,  p75:160, n:51,  color:'var(--warn)',     conf:'High'},
+      {range:'<40',   mean:116, median:92,  p25:68,  p75:148, n:145, color:'var(--negative)', conf:'High'},
+    ]
+  },
+  '26': {
+    n: 151,
+    norm: { fund:{lo:28.5,hi:94.0}, etf:{lo:30.0,hi:90.5}, vol:{lo:6550,hi:14793}, brand:{lo:0,hi:87.5} },
+    vol_p20: 7110, vol_p80: 11021,
+    corr_raw:      { fund:0.549, etf:0.324, brand:0.415, vol:0.584, pct:0.019 },
+    corr_dt:       { fund:0.428, etf:0.513, brand:0.317, vol:0.275, pct:-0.020 },
+    lag: {
+      fund:  [0.428,0.387,0.136,-0.004,0.206,-0.066],
+      etf:   [0.513,0.476,0.209,0.062,0.144,-0.110],
+      brand: [0.317,0.315,0.129,0.104,0.162,-0.057],
+      vol:   [0.286,0.178,0.068,0.073,0.000,-0.175],
+    },
+    hist: [
+      {range:'>80',   mean:446, median:425, p25:391, p75:473, n:17,  color:'var(--positive)', conf:'Medium'},
+      {range:'60–80', mean:228, median:196, p25:142, p75:279, n:37,  color:'var(--accent)',   conf:'Medium'},
+      {range:'40–60', mean:190, median:140, p25:119, p75:217, n:36,  color:'var(--warn)',     conf:'Medium'},
+      {range:'<40',   mean:166, median:120, p25:97,  p75:194, n:60,  color:'var(--negative)', conf:'High'},
+    ]
+  }
+};
+
+let currentDS = 'all';
+
+// ══ 資料集切換 ══
+function setDataset(ds) {
+  currentDS = ds;
+  document.getElementById('btn-all').classList.toggle('active', ds==='all');
+  document.getElementById('btn-26').classList.toggle('active', ds==='26');
+  renderCorr();
+  renderLag();
+  renderHist();
+  calcScore(); // recalc vol percentile with new thresholds
+}
+
+// ══ 日期 + 週一偵測 ══
+(function(){
+  const now = new Date();
+  const fmt = d=>`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+  const dayNames=['日','一','二','三','四','五','六'];
+  const isMonday = now.getDay()===1;
+  const yest = new Date(now); yest.setDate(now.getDate()-1);
+  const lastFri = new Date(now);
+  for(let i=1;i<=7;i++){const d=new Date(now);d.setDate(now.getDate()-i);if(d.getDay()===5){lastFri.setTime(d.getTime());break;}}
+  document.getElementById('today-date').textContent=`${fmt(now)}（週${dayNames[now.getDay()]}）`;
+  if(isMonday){
+    document.getElementById('yesterday-date').textContent=`${fmt(lastFri)}（上週五）`;
+    document.getElementById('yesterday-date').style.color='var(--warn)';
+    document.getElementById('monday-alert').style.display='block';
+    ['lbl-fund','lbl-etf','lbl-brand'].forEach(id=>{document.getElementById(id).textContent='上週五數值（0–100）';});
+    document.getElementById('lbl-vol').textContent='昨日成交量（非交易日填 0）';
+  } else {
+    document.getElementById('yesterday-date').textContent=`${fmt(yest)}（週${dayNames[yest.getDay()]}）`;
+  }
+  // 設定品牌事件日期預設值
+  document.getElementById('bt-date').value = fmt(now).replace(/\./g,'-');
+})();
+
+// ══ 需求指數計算 ══
+function normVal(v,lo,hi){return Math.min(100,Math.max(0,(v-lo)/(hi-lo)*100));}
+
+function calcScore(){
+  const s = STATS[currentDS];
+  const fund  = +document.getElementById('v-fund').value  || 0;
+  const etf   = +document.getElementById('v-etf').value   || 0;
+  const brand = +document.getElementById('v-brand').value || 0;
+  const vol   = +document.getElementById('v-vol').value   || 0;
+
+  // 品牌事件偵測
+  document.getElementById('brand-event').style.display = brand>0?'block':'none';
+
+  // 成交量百分位（動態）
+  const vp20=s.vol_p20, vp80=s.vol_p80;
+  const volHint = document.getElementById('vol-hint-dynamic');
+  const volBadge = document.getElementById('vol-badge');
+  const volTriggerTag = document.getElementById('vol-trigger-tag');
+  volTriggerTag.textContent = `P80（動態）> ${vp80}億`;
+  if(vol>0){
+    // 估算百分位（用線性插值簡化）
+    const allVols = currentDS==='all'
+      ? [3396,4260,4488,4752,4852,5448,5715,6197,6915,7110,7148,7150,7158,7411,8154,8167,8817,9329,9459,9570,10000,11021,12784,13168,14793,19170]
+      : [6550,7110,7110,7411,8154,8167,8817,9329,9459,9570,10000,11021,12784,13168,14793];
+    const pct = Math.round(allVols.filter(v2=>v2<=vol).length/allVols.length*100);
+    let lvl, bg, bc, fc;
+    if(vol<=vp20){lvl='低量';bg='rgba(220,38,38,.08)';bc='rgba(220,38,38,.35)';fc='var(--negative)';}
+    else if(vol<=vp80){lvl='正常量';bg='rgba(176,128,0,.08)';bc='rgba(176,128,0,.35)';fc='var(--warn)';}
+    else{lvl='高量';bg='rgba(22,163,74,.08)';bc='rgba(22,163,74,.35)';fc='var(--positive)';}
+    volHint.innerHTML=`前 ${pct}% · <span style="color:${fc};font-weight:600">${lvl}</span> · P20=${vp20}億 / P80=${vp80}億<br><span style="color:var(--text-dim)">百分位依歷史樣本估算，非即時市場百分位</span>`;
+    volBadge.style.cssText=`display:inline-block;background:${bg};border-color:${bc};color:${fc}`;
+    volBadge.textContent=`${vol.toLocaleString()}億 · ${lvl} (P${pct})`;
+  } else {
+    volHint.innerHTML=`P20=${vp20}億 / P80=${vp80}億（${currentDS==='all'?'All Data':'2026 Only'}）<br><span style='color:var(--text-dim)'>百分位依歷史樣本估算，非即時市場百分位</span>`;
+    volBadge.style.display='none';
+  }
+
+  // 正規化
+  const n = s.norm;
+  const nf=normVal(fund, n.fund.lo,  n.fund.hi);
+  const ne=normVal(etf,  n.etf.lo,   n.etf.hi);
+  const nv=normVal(vol,  n.vol.lo,   n.vol.hi);
+  const nb=normVal(brand,n.brand.lo, n.brand.hi);
+
+  // 指數（Expert Weight v1）
+  const score = nf*0.45 + ne*0.30 + nv*0.20 + nb*0.05;
+  const scoreR = Math.round(score);
+
+  // 雙指數
+  const mds = Math.round(nf*0.50 + ne*0.33 + nv*0.17);
+  const bds = Math.round(nb);
+
+  // 更新主指數
+  document.getElementById('score-num').textContent = scoreR;
+  let color, pillStyle, actionHTML;
+  if(score>=65){
+    color='var(--positive)';pillStyle='background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.3);color:var(--positive)';
+    document.getElementById('score-pill').innerHTML=`<span class="score-pill" style="${pillStyle}">🟢 高需求</span>`;
+    actionHTML=`<div style="font-family:var(--mono);font-size:10px;color:var(--positive);margin-bottom:7px;letter-spacing:.06em">▶ 建議行動</div>
+      <div style="font-size:12px;line-height:1.8;color:var(--text-mid)">・廣告出價可積極<br>・強化投資入門 / ETF 素材<br>・把握高需求窗口${fund>70?'<br>・<span style="color:var(--accent)">基金 Trends 觸發 ✓</span>':''}${etf>65?'<br>・<span style="color:var(--accent3)">ETF Trends 觸發 ✓</span>':''}${vol>vp80?'<br>・<span style="color:var(--positive)">台股高量日 ✓</span>':''}</div>`;
+  } else if(score>=40){
+    color='var(--warn)';pillStyle='background:rgba(176,128,0,.1);border:1px solid rgba(176,128,0,.3);color:var(--warn)';
+    document.getElementById('score-pill').innerHTML=`<span class="score-pill" style="${pillStyle}">🟡 中等需求</span>`;
+    actionHTML=`<div style="font-family:var(--mono);font-size:10px;color:var(--warn);margin-bottom:7px;letter-spacing:.06em">▶ 建議行動</div>
+      <div style="font-size:12px;line-height:1.8;color:var(--text-mid)">・維持正常投放節奏<br>・觀察 Trends 走向<br>・不需要特別加碼</div>`;
+  } else {
+    color='var(--negative)';pillStyle='background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.3);color:var(--negative)';
+    document.getElementById('score-pill').innerHTML=`<span class="score-pill" style="${pillStyle}">🔴 低需求</span>`;
+    actionHTML=`<div style="font-family:var(--mono);font-size:10px;color:var(--negative);margin-bottom:7px;letter-spacing:.06em">▶ 建議行動</div>
+      <div style="font-size:12px;line-height:1.8;color:var(--text-mid)">・廣告加碼效益有限<br>・保守出價，降低預算<br>・改以測試型素材為主</div>`;
+  }
+  document.getElementById('score-num').style.color=color;
+  const ab=document.getElementById('action-box');
+  ab.innerHTML=actionHTML; ab.style.borderColor=color;
+  const bgMap={'var(--positive)':'rgba(22,163,74,.06)','var(--warn)':'rgba(176,128,0,.06)','var(--negative)':'rgba(220,38,38,.06)'};
+  ab.style.background=bgMap[color]||'transparent';
+
+  // 找出歷史對照
+  const hist=STATS[currentDS].hist;
+  let matchHist = hist.find(h=>{
+    if(h.range==='>80') return scoreR>=80;
+    if(h.range==='60–80') return scoreR>=60&&scoreR<80;
+    if(h.range==='40–60') return scoreR>=40&&scoreR<60;
+    return scoreR<40;
+  });
+  document.getElementById('score-meta').innerHTML=
+    `需求指數與開戶相關 r=0.55<br>Lag 1 領先效果顯著<br>`+
+    (matchHist?`歷史同分段（<strong>${matchHist.range}</strong>）：<br>均值 <strong style="color:${matchHist.color}">${matchHist.mean}戶</strong> · 中位 ${matchHist.median}戶（n=${matchHist.n}天）`:'');
+
+  // 更新分解 bars
+  [{id:'fund',v:nf,c:'var(--accent)'},{id:'etf',v:ne,c:'var(--accent3)'},{id:'vol',v:nv,c:'var(--warn)'},{id:'brand',v:nb,c:'var(--accent2)'}].forEach(b=>{
+    document.getElementById(`bar-${b.id}`).style.width=b.v.toFixed(0)+'%';
+    document.getElementById(`num-${b.id}`).textContent=b.v.toFixed(0);
+  });
+
+  // 雙指數
+  document.getElementById('mds-score').textContent=mds;
+  document.getElementById('bds-score').textContent=bds;
+  [{id:'mds-fund',v:nf},{id:'mds-etf',v:ne},{id:'mds-vol',v:nv}].forEach(b=>{
+    document.getElementById(b.id).style.width=b.v.toFixed(0)+'%';
+    document.getElementById(b.id+'-n').textContent=b.v.toFixed(0);
+  });
+  document.getElementById('bds-brand').style.width=nb.toFixed(0)+'%';
+  document.getElementById('bds-brand-n').textContent=nb.toFixed(0);
+
+  // 四象限
+  const mHigh=mds>=50, bHigh=bds>=10;
+  ['q-hh','q-hl','q-lh','q-ll'].forEach(id=>{
+    const el=document.getElementById(id); el.style.opacity='0.45'; el.classList.remove('active');
+  });
+  const activeQ = mHigh&&bHigh?'q-hh':mHigh&&!bHigh?'q-hl':!mHigh&&bHigh?'q-lh':'q-ll';
+  const el=document.getElementById(activeQ); el.style.opacity='1'; el.classList.add('active');
+  const qLabels={
+    'q-hh':'市場熱 ＋ 品牌熱 → 需求高峰',
+    'q-hl':'市場熱 ＋ 品牌弱 → 品牌承接不足',
+    'q-lh':'市場冷 ＋ 品牌熱 → 品牌活動顯現',
+    'q-ll':'市場冷 ＋ 品牌弱 → 低需求期'
+  };
+  document.getElementById('quadrant-label').textContent=qLabels[activeQ];
+}
+
+function resetInputs(){
+  document.getElementById('v-fund').value=74;
+  document.getElementById('v-etf').value=59;
+  document.getElementById('v-brand').value=0;
+  document.getElementById('v-vol').value=13168;
+  calcScore();
+}
+
+// ══ 相關係數渲染 ══
+function renderCorr(){
+  const s=STATS[currentDS];
+  document.getElementById('corr-dataset-label').textContent=`· ${currentDS==='all'?'All Data（n=304）':'2026 Only（n=151）'}`;
+  // raw_sig / dt_sig 各自獨立判定（ETF raw n.s. 但 dt *** 是正確的）
+  const rows=[
+    {name:'基金 Trends', raw:s.corr_raw.fund,  dt:s.corr_dt.fund,  raw_sig:'***', dt_sig:'***'},
+    {name:'ETF Trends',  raw:s.corr_raw.etf,   dt:s.corr_dt.etf,
+      raw_sig: currentDS==='all'?'n.s.':'***',  dt_sig:'***'},
+    {name:'品牌 Trends', raw:s.corr_raw.brand, dt:s.corr_dt.brand, raw_sig:'***', dt_sig:'***'},
+    {name:'台股成交量',  raw:s.corr_raw.vol,   dt:s.corr_dt.vol,
+      raw_sig:'***', dt_sig: currentDS==='all'?'***':'**'},
+    {name:'台股漲跌幅',  raw:s.corr_raw.pct,   dt:s.corr_dt.pct,   raw_sig:'n.s.',dt_sig:'n.s.'},
+  ];
+  const con=document.getElementById('corr-rows'); con.innerHTML='';
+  rows.forEach(r=>{
+    const dtAbs=Math.abs(r.dt), rawAbs=Math.abs(r.raw);
+    // bar 用 detrended（去趨勢後才是真實短期訊號）
+    const barW=Math.min(100,dtAbs*200).toFixed(0);
+    const barColor=r.dt<0?'var(--negative)':dtAbs>.35?'var(--accent)':dtAbs>.15?'var(--accent3)':'var(--text-dim)';
+    // 顏色各自獨立
+    const dtColor=dtAbs>.4?'var(--accent)':dtAbs>.2?'var(--accent3)':'var(--text-dim)';
+    const rawColor=rawAbs>.5?'var(--warn)':rawAbs>.3?'var(--accent3)':'var(--text-dim)';
+    const dtSigHtml=r.dt_sig==='n.s.'?'<span class="sig sn">n.s.</span>':'<span class="sig sh">'+r.dt_sig+'</span>';
+    const rawSigHtml=r.raw_sig==='n.s.'?'<span class="sig sn">n.s.</span>':'<span class="sig sh">'+r.raw_sig+'</span>';
+    // 欄位順序：名稱 | bar(detrended) | detrended值 | raw值
+    con.innerHTML+=`<div class="ci">
+      <div class="cn">${r.name}</div>
+      <div class="cb-w"><div class="cb" style="width:${barW}%;background:${barColor}"></div></div>
+      <div class="cv" style="color:${dtColor}">${r.dt>0?'+':''}${r.dt.toFixed(3)}${dtSigHtml}</div>
+      <div class="cv2" style="color:${rawColor}">${r.raw>0?'+':''}${r.raw.toFixed(3)}${rawSigHtml}</div>
+    </div>`;
+  });
+}
+
+// ══ Lag 表格渲染 ══
+function renderLag(){
+  const s=STATS[currentDS];
+  const lagKeys=[0,1,3,5,7,10];
+  const lagDefs=[
+    {name:'基金 Trends', key:'fund', best:1,  bestNote:''},
+    {name:'ETF Trends',  key:'etf',  best:1,  bestNote:''},
+    {name:'品牌 Trends', key:'brand',best:1,  bestNote:''},
+    {name:'台股成交量',  key:'vol',  best:1,  bestNote:'Lag0同日亦顯著'},
+  ];
+  const tb=document.getElementById('lag-tbody'); tb.innerHTML='';
+  lagDefs.forEach(r=>{
+    const tr=document.createElement('tr');
+    let h=`<td>${r.name}</td>`;
+    s.lag[r.key].forEach((v,i)=>{
+      if(v===null||v===undefined){h+=`<td style="color:var(--text-dim)">—</td>`;return;}
+      const a=Math.abs(v);
+      const bg=a>.35?'rgba(0,168,130,.12)':a>.15?'rgba(74,114,232,.08)':'rgba(150,155,170,.08)';
+      const cl=a>.35?'var(--accent)':a>.15?'var(--accent3)':'var(--text-dim)';
+      const best=lagKeys[i]===r.best?'class="best-lag"':'';
+      h+=`<td><span style="display:inline-block;padding:2px 7px;border-radius:3px;background:${bg};color:${cl};font-size:11px" ${best}>${v>0?'+':''}${v.toFixed(3)}</span></td>`;
+    });
+    h+=`<td style="color:var(--warn);font-size:11px;font-weight:600">Lag ${r.best}${r.bestNote?'<br><span style="color:var(--text-dim);font-size:9px;font-weight:400">'+r.bestNote+'</span>':''}</td>`;
+    tr.innerHTML=h; tb.appendChild(tr);
+  });
+  // n 值提示
+  const nNote = currentDS==='26' ? ` <span style="color:var(--warn)">（n=151，樣本較短，僅供近期決策參考）</span>` : ` <span style="color:var(--text-dim)">（n=304）</span>`;
+  document.querySelector('#lag-tbody').closest('.card').querySelector('.cs').innerHTML =
+    `最佳領先 Lag（排除 Lag 0，僅看真正領先訊號）。Lag 0 同日相關亦列出供參考。${nNote}`;
+}
+
+// ══ 歷史對照渲染 ══
+function renderHist(){
+  const s=STATS[currentDS];
+  const label=currentDS==='all'?'All Data（n=304）':'2026 Only（n=151）';
+  const validN = currentDS==='all'?303:150;
+  const highH=s.hist.find(h=>h.range==='>80');
+  const lowH=s.hist.find(h=>h.range==='<40');
+  const ratio = highH && lowH && lowH.median>0 ? (highH.median/lowH.median).toFixed(1) : null;
+  const bizNote = ratio ? `高需求日（需求指數>80）開戶中位數約為低需求日（<40）的 <strong style="color:var(--positive)">${ratio} 倍</strong>。` : '';
+  document.getElementById('hist-subtitle').innerHTML=`依需求指數分四區間，顯示各區間歷史日均開戶數。目前使用 <strong>${label}</strong> 資料集。有效樣本 n=${validN}（僅統計可完整計算需求指數的日期）。${bizNote}${currentDS==='26'?'<span style="color:var(--warn)">（2026 Only 樣本較短，n&lt;40 的區間請謹慎解讀）</span>':''}`;
+  const con=document.getElementById('odi-hist-cells'); con.innerHTML='';
+  const borderMap={'var(--positive)':'rgba(22,163,74,.3)','var(--accent)':'rgba(0,168,130,.3)','var(--warn)':'rgba(176,128,0,.3)','var(--negative)':'rgba(220,38,38,.3)'};
+  s.hist.forEach(h=>{
+    const c=h.color;
+    const bc=borderMap[c]||'#dde0e8';
+    const confKey=h.n<20?'Low':h.n<50?'Medium':'High';
+    const confLabel={'High':'高','Medium':'中','Low':'低'}[confKey];
+    const confColor={'High':'var(--positive)','Medium':'var(--warn)','Low':'var(--negative)'}[confKey];
+    con.innerHTML+=`<div class="oh-cell" style="border-color:${bc}">
+      <div class="oh-range" style="color:${c}">需求指數 ${h.range}</div>
+      <div class="oh-mean" style="color:${c}">${h.mean}</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">戶/日 均值</div>
+      <div class="oh-sub">中位數 ${h.median}戶<br>P25–P75：${h.p25}–${h.p75}戶</div>
+      <div class="oh-n">n=${h.n}天&nbsp;<span style="color:${confColor};border:1px solid ${confColor};padding:1px 5px;border-radius:2px;font-size:9px">可信度 ${confLabel}</span></div>
+    </div>`;
+  });
+}
+
+// ══ Charts ══
+// Custom plugin: draw grey background for issue period (indices 0-4)
+const issueBgPlugin = {
+  id:'issueBg',
+  beforeDraw(chart){
+    const {ctx,chartArea,scales}=chart;
+    if(!chartArea||!scales.x) return;
+    const x0=scales.x.getPixelForValue(-0.5);
+    const x1=scales.x.getPixelForValue(4.5);
+    ctx.save();
+    ctx.fillStyle='rgba(150,160,175,.1)';
+    ctx.fillRect(x0,chartArea.top,x1-x0,chartArea.height);
+    ctx.fillStyle='#9ca3af';
+    ctx.font=`9px ${MONO}`;
+    ctx.textAlign='center';
+    ctx.fillText('歸因異常期',((x0+x1)/2),chartArea.top+12);
+    ctx.restore();
+  }
+};
+// 需求指數圖表：異常期灰底 for issue period (2025/08-12 = indices 0-4)
+new Chart(document.getElementById('odiChart'),{
+  type:'line',
+  plugins:[issueBgPlugin],
+  data:{labels:MOS, datasets:[
+    {label:'需求指數',data:[55.6,61.6,66.7,33.7,34.1,61.7,53.8,48.2,67.6,78.4],borderColor:'#4a72e8',backgroundColor:'rgba(74,114,232,.07)',borderWidth:2,pointRadius:4,fill:true,tension:0.3,yAxisID:'y'},
+    {label:'日均開戶',data:[59.7,81.3,69.7,78.8,101.7,132.4,132.7,207.3,291.9,330.1],borderColor:'#00a882',borderWidth:2,pointRadius:4,fill:false,tension:0.3,yAxisID:'y2'}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:TT},
+    scales:{x:{grid:GRID},y:{grid:GRID,ticks:{color:'#4a72e8',font:{size:10}},title:{display:true,text:'需求指數',color:'#4a72e8',font:{size:10}}},y2:{position:'right',grid:{display:false},ticks:{color:'#00a882',font:{size:10}},title:{display:true,text:'日均開戶',color:'#00a882',font:{size:10}}}}}
+});
+
+new Chart(document.getElementById('structChart'),{
+  type:'bar',
+  plugins:[issueBgPlugin],
+  data:{labels:MOS,datasets:[
+    {label:'自然開戶',data:[17,0,0,0,0,44,56,120,222,249],backgroundColor:'rgba(0,168,130,.75)',borderRadius:3,stack:'s'},
+    {label:'廣告開戶',data:[42,81,70,78,102,89,77,87,70,81],backgroundColor:'rgba(224,85,32,.55)',borderRadius:3,stack:'s'}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{...TT,callbacks:{footer:i=>i[0].dataIndex<5?'⚠ 2025歸因異常期，廣告開戶數有系統性高估':''}}}},
+    scales:{x:{grid:{display:false},stacked:true},y:{grid:GRID,stacked:true,ticks:{callback:v=>`${v}戶`}}}
+});
+
+new Chart(document.getElementById('totalChart'),{
+  type:'line',
+  plugins:[issueBgPlugin],
+  data:{labels:MOS,datasets:[{label:'日均開戶',data:[59.7,81.3,69.7,78.8,101.7,132.4,132.7,207.3,291.9,330.1],borderColor:'#00a882',backgroundColor:'rgba(0,168,130,.08)',borderWidth:2,pointRadius:4,fill:true,tension:0.3}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:TT},scales:{x:{grid:GRID},y:{grid:GRID,ticks:{callback:v=>`${v}戶`}}}}
+});
+
+new Chart(document.getElementById('wdChart'),{
+  type:'bar',
+  data:{labels:['週一','週二','週三','週四','週五','週六','週日'],
+    datasets:[{data:[143,155,161,161,165,133,124],backgroundColor:['rgba(0,168,130,.7)','rgba(0,168,130,.7)','rgba(0,168,130,.7)','rgba(0,168,130,.7)','rgba(0,168,130,.9)','rgba(180,185,200,.5)','rgba(180,185,200,.5)'],borderRadius:4,borderSkipped:false}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:c=>` 均 ${c.raw} 戶`}}},scales:{x:{grid:{display:false}},y:{grid:GRID,ticks:{callback:v=>`${v}戶`}}}}
+});
+
+// ════════════════════════════════════════════════════
+// API 工具函式
+// ════════════════════════════════════════════════════
+const isOnline = () => !!API_URL;
+
+async function apiGet(action, params={}) {
+  if (!isOnline()) return null;
+  const url = new URL(API_URL);
+  url.searchParams.set('action', action);
+  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
+  const res  = await fetch(url.toString());
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error);
+  return json.data;
+}
+
+async function apiPost(body) {
+  if (!isOnline()) return null;
+  const res  = await fetch(API_URL, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  });
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error);
+  return json.data;
+}
+
+function setStatus(id, msg, color='var(--text-dim)') {
+  const el = document.getElementById(id);
+  if (el) { el.textContent = msg; el.style.color = color; }
+}
+
+// ════════════════════════════════════════════════════
+// 記錄今日數據
+// ════════════════════════════════════════════════════
+async function saveToday() {
+  const btn = document.getElementById('save-btn');
+
+  // 收集當前輸入值
+  const fund  = +document.getElementById('v-fund').value  || 0;
+  const etf   = +document.getElementById('v-etf').value   || 0;
+  const brand = +document.getElementById('v-brand').value || 0;
+  const vol   = +document.getElementById('v-vol').value   || 0;
+
+  const scoreEl = document.getElementById('score-num');
+  const pillEl  = document.getElementById('score-pill');
+  const score   = parseInt(scoreEl.textContent) || 0;
+  const signal  = pillEl.textContent.replace(/[🟢🟡🔴]/g,'').trim();
+
+  // 市場/品牌分數
+  const mds = parseInt(document.getElementById('mds-score').textContent) || 0;
+  const bds = parseInt(document.getElementById('bds-score').textContent) || 0;
+
+  // 四象限
+  const qLabel = document.getElementById('quadrant-label').textContent;
+
+  // 星期
+  const dayNames = ['日','一','二','三','四','五','六'];
+  const now = new Date();
+  const weekday = '週' + dayNames[now.getDay()];
+
+  // 成交量位階
+  const volHint = document.getElementById('vol-hint-dynamic').textContent;
+  const volLevel = volHint.includes('高量')?'高量':volHint.includes('低量')?'低量':'正常';
+  const volPctMatch = volHint.match(/前\s*(\d+)%/);
+  const volPct = volPctMatch ? volPctMatch[1] + '%' : '';
+
+  const data = {
+    date:         document.getElementById('yesterday-date').textContent.split('（')[0].replace(/\./g,'-'),
+    weekday,
+    fund_trends:  fund,
+    etf_trends:   etf,
+    brand_trends: brand,
+    taiex_vol:    vol,
+    demand_score: score,
+    market_score: mds,
+    brand_score:  bds,
+    signal,
+    vol_level:    volLevel,
+    vol_pct:      volPct,
+    quadrant:     qLabel,
+    note:         '',
+  };
+
+  if (!isOnline()) {
+    setStatus('save-status', '⚠ 離線模式：請先設定 API_URL 才能儲存資料', 'var(--warn)');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '儲存中…';
+  setStatus('save-status', '');
+
+  try {
+    const result = await apiPost({ action:'saveDaily', data });
+    const action = result?.action === 'updated' ? '更新' : '新增';
+    btn.textContent = '💾 記錄今日數據';
+    btn.disabled = false;
+    setStatus('save-status', `✓ 已${action}記錄：${data.date}`, 'var(--positive)');
+    loadHistory(); // 重新載入歷史
+  } catch(ex) {
+    btn.textContent = '💾 記錄今日數據';
+    btn.disabled = false;
+    setStatus('save-status', '✗ 儲存失敗：' + ex.message, 'var(--negative)');
+  }
+}
+
+// ════════════════════════════════════════════════════
+// 歷史記錄
+// ════════════════════════════════════════════════════
+let historyLimit = 30;
+
+function changeHistoryLimit(val) {
+  historyLimit = parseInt(val);
+  document.getElementById('history-limit').textContent = val === '999' ? '全部' : val;
+  loadHistory();
+}
+
+const SIGNAL_STYLE = {
+  '高需求': 'color:var(--positive)',
+  '中等需求': 'color:var(--warn)',
+  '低需求': 'color:var(--negative)',
+};
+
+async function loadHistory() {
+  const tbody = document.getElementById('history-tbody');
+  const status = document.getElementById('history-status');
+
+  if (!isOnline()) {
+    tbody.innerHTML = `<tr><td colspan="10" style="padding:16px 10px;color:var(--text-dim);text-align:center;font-family:var(--mono);font-size:11px">
+      ⚠ 離線模式：設定 API_URL 後即可查看歷史記錄
+    </td></tr>`;
+    return;
+  }
+
+  status.textContent = '載入中…';
+  try {
+    const rows = await apiGet('getDaily', { limit: historyLimit });
+    status.textContent = rows.length > 0 ? `共 ${rows.length} 筆` : '';
+
+    if (!rows || rows.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="10" style="padding:16px 10px;color:var(--text-dim);text-align:center;font-family:var(--mono);font-size:11px">尚無記錄，填完資料後按「記錄今日數據」。</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = rows.map(r => {
+      const scoreColor = r.demand_score >= 65 ? 'var(--positive)' : r.demand_score >= 40 ? 'var(--warn)' : 'var(--negative)';
+      const signalStyle = SIGNAL_STYLE[r.signal] || 'color:var(--text-dim)';
+      return `<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:7px 10px;white-space:nowrap">${r.date}</td>
+        <td style="padding:7px 10px;color:var(--text-dim)">${r.weekday||''}</td>
+        <td style="padding:7px 10px;text-align:center;font-weight:600;color:${scoreColor}">${r.demand_score}</td>
+        <td style="padding:7px 10px;text-align:center;${signalStyle}">${r.signal||'—'}</td>
+        <td style="padding:7px 10px;text-align:center;color:var(--accent)">${r.fund_trends}</td>
+        <td style="padding:7px 10px;text-align:center;color:var(--accent3)">${r.etf_trends}</td>
+        <td style="padding:7px 10px;text-align:center;color:var(--accent2)">${r.brand_trends}</td>
+        <td style="padding:7px 10px;text-align:center;color:var(--warn)">${r.taiex_vol}</td>
+        <td style="padding:7px 10px;color:var(--text-dim);font-size:10px;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.quadrant||'—'}</td>
+        <td style="padding:7px 10px;color:var(--text-dim);font-size:10px">${r.note||''}</td>
+      </tr>`;
+    }).join('');
+  } catch(ex) {
+    status.textContent = '載入失敗：' + ex.message;
+    status.style.color = 'var(--negative)';
+  }
+}
+
+// ════════════════════════════════════════════════════
+// 品牌事件（持久化版）
+// ════════════════════════════════════════════════════
+let brandEvents = [];   // fallback for offline mode
+
+function renderBrandTimeline(events) {
+  const con = document.getElementById('brand-timeline');
+  con.innerHTML = '';
+  const list = events || brandEvents;
+  if (list.length === 0) {
+    con.innerHTML = '<div class="bt-empty">尚無事件記錄。在下方新增品牌 Trends 出現非零值時的對應事件。</div>';
+    return;
+  }
+  [...list].sort((a,b)=>String(a.date).localeCompare(String(b.date))).forEach((ev, i) => {
+    const delFn = ev.rowIndex
+      ? `deleteBrandEventRemote(${ev.rowIndex})`
+      : `deleteBrandEventLocal(${i})`;
+    con.innerHTML += `<div class="bt-row">
+      <div class="bt-date">${ev.date}</div>
+      <div class="bt-event">${ev.event}</div>
+      <button class="bt-del" onclick="${delFn}">✕</button>
+    </div>`;
+  });
+}
+
+async function loadBrandEvents() {
+  if (!isOnline()) { renderBrandTimeline(brandEvents); return; }
+  try {
+    const events = await apiGet('getEvents');
+    brandEvents = events || [];
+    renderBrandTimeline(brandEvents);
+  } catch(ex) {
+    setStatus('event-save-status', '載入失敗：' + ex.message, 'var(--negative)');
+  }
+}
+
+async function addBrandEvent() {
+  const d = document.getElementById('bt-date').value;
+  const e = document.getElementById('bt-event').value.trim();
+  if (!d || !e) { alert('請填入日期與事件說明'); return; }
+
+  if (!isOnline()) {
+    brandEvents.push({ date: d, event: e });
+    document.getElementById('bt-event').value = '';
+    renderBrandTimeline(brandEvents);
+    setStatus('event-save-status', '⚠ 離線模式，記錄未持久化', 'var(--warn)');
+    return;
+  }
+
+  setStatus('event-save-status', '儲存中…');
+  try {
+    await apiPost({ action:'saveEvent', data:{ date:d, event:e } });
+    document.getElementById('bt-event').value = '';
+    setStatus('event-save-status', `✓ 已儲存：${d}`, 'var(--positive)');
+    loadBrandEvents();
+  } catch(ex) {
+    setStatus('event-save-status', '✗ 儲存失敗：' + ex.message, 'var(--negative)');
+  }
+}
+
+async function deleteBrandEventRemote(rowIndex) {
+  if (!confirm('確定刪除此事件？')) return;
+  try {
+    await apiPost({ action:'deleteEvent', rowIndex });
+    setStatus('event-save-status', '✓ 已刪除', 'var(--positive)');
+    loadBrandEvents();
+  } catch(ex) {
+    setStatus('event-save-status', '✗ 刪除失敗：' + ex.message, 'var(--negative)');
+  }
+}
+
+function deleteBrandEventLocal(i) {
+  brandEvents.splice(i, 1);
+  renderBrandTimeline(brandEvents);
+}
+
+// ══ 初始化 ══
+renderCorr();
+renderLag();
+renderHist();
+calcScore();
+loadHistory();
+loadBrandEvents();
+</script>
+</body>
+</html>

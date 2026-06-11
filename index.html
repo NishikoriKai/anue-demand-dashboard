@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>開戶需求監測儀表板 v8 | 鉅亨買基金</title>
+<title>市場自然需求溫度計 v13 | 鉅亨買基金</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600&family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
@@ -222,10 +222,10 @@ footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--border);displ
 <header>
   <div>
     <div class="h-eyebrow">Demand Intelligence · 鉅亨買基金</div>
-    <h1>開戶需求<em>先行指標</em>監測<span class="vtag">v8</span></h1>
+    <h1>市場自然需求<em>溫度計</em><span class="vtag">v13</span></h1>
   </div>
   <div class="h-right">
-    目的：找出廣告以外驅動開戶的需求先行訊號<br>
+    監測市場自發投資意願，判斷廣告投放時機<br>
     資料期間：2025.08–2026.05（n=304天）<br>
     廣告效率數字請參考代理商報告
   </div>
@@ -326,7 +326,7 @@ footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--border);displ
         <span style="color:var(--positive)">🟢 &gt;65：高需求</span>，廣告可積極。<br>
         <span style="color:var(--warn)">🟡 40–65：中等</span>，維持節奏。<br>
         <span style="color:var(--negative)">🔴 &lt;40：低需求</span>，保守出價。<br><br>
-        指數反映<strong>未來7天需求方向</strong>，非今日點預測。
+        指數反映<strong>市場當前需求溫度</strong>，非開戶數預測。
       </div>
     </div>
   </div>
@@ -334,26 +334,51 @@ footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--border);displ
     <div style="font-size:12px;font-weight:600;margin-bottom:10px">觸發條件一覽</div>
     <table class="trigger-table">
       <tr><th>指標</th><th>觸發門檻</th><th>代表意義</th><th>建議行動</th></tr>
-      <tr><td>基金 Trends</td><td><span class="tag" style="background:rgba(0,168,130,.12);color:var(--accent)">&gt; 70</span></td><td>潛在投資人搜尋需求高漲，Lag 1 r=0.42</td><td>加碼廣告出價</td></tr>
-      <tr><td>ETF Trends</td><td><span class="tag" style="background:rgba(0,168,130,.12);color:var(--accent)">&gt; 65</span></td><td>ETF 搜尋熱度高，適合推 ETF 素材</td><td>強化 ETF 主題</td></tr>
-      <tr><td>台股成交量</td><td><span class="tag" style="background:rgba(176,128,0,.1);color:var(--warn)" id="vol-trigger-tag">動態 P80</span></td><td>市場參與熱度高，高量日開戶顯著提升</td><td>提高出價上限</td></tr>
-      <tr><td>品牌 Trends</td><td><span class="tag" style="background:rgba(74,114,232,.1);color:var(--accent3)">從 0 → 非零</span></td><td>品牌出現外部話題（媒體、KOL、活動）</td><td>追蹤話題來源</td></tr>
-      <tr><td style="color:var(--text-dim)">台股漲跌幅</td><td><span class="tag" style="background:var(--surface2);color:var(--text-dim)">不採用</span></td><td>相關性 r=0.01，無預測力。重要的是「量」非「方向」</td><td>不需關注</td></tr>
+      <tr>
+        <td>基金 Trends</td>
+        <td><span class="tag" style="background:rgba(0,168,130,.12);color:var(--accent)">&gt; 70</span></td>
+        <td>市場對基金搜尋需求升溫<br><span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">最佳領先：Lag 1（r=0.42）</span></td>
+        <td>加碼廣告出價，承接搜尋流量</td>
+      </tr>
+      <tr>
+        <td>ETF Trends</td>
+        <td><span class="tag" style="background:rgba(0,168,130,.12);color:var(--accent)">&gt; 65</span></td>
+        <td>ETF 搜尋熱度升溫，投資意願提升<br><span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">最佳領先：Lag 1（r=0.38）</span></td>
+        <td>強化 ETF 主題素材</td>
+      </tr>
+      <tr>
+        <td>台股成交量</td>
+        <td><span class="tag" style="background:rgba(176,128,0,.1);color:var(--warn)" id="vol-trigger-tag">動態 P80</span></td>
+        <td>市場參與熱度高，交易活躍<br><span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">同日訊號（Lag 0，r=0.32）</span></td>
+        <td>提高出價上限，把握高量日</td>
+      </tr>
+      <tr>
+        <td>品牌 Trends</td>
+        <td><span class="tag" style="background:rgba(74,114,232,.1);color:var(--accent3)">從 0 → 非零</span></td>
+        <td>品牌出現外部話題（媒體、KOL、活動）<br><span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">最佳領先：Lag 1（r=0.30）</span></td>
+        <td>追蹤話題來源，善用話題時機</td>
+      </tr>
+      <tr>
+        <td style="color:var(--text-dim)">台股漲跌幅</td>
+        <td><span class="tag" style="background:var(--surface2);color:var(--text-dim)">不採用</span></td>
+        <td>相關性 r=0.01，無預測力<br><span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">重要的是「量」而非「方向」</span></td>
+        <td>不需關注</td>
+      </tr>
     </table>
   </div>
 </div>
 
 <!-- ══ 4. 輸入面板 ══ -->
-<div class="sl"><div class="sl-dot" style="background:var(--warn)"></div>未來7日開戶需求指數 · 輸入昨日數值</div>
+<div class="sl"><div class="sl-dot" style="background:var(--warn)"></div>市場自然需求溫度指數 · 輸入昨日數值</div>
 
 <div class="input-panel">
   <div class="ip-header">
     <div>
       <div class="ip-title">輸入昨日觀測值</div>
       <div class="ip-sub">
-        填入前一日各指標 → 需求指數即時更新 → 評估<strong>未來7天開戶需求強弱</strong><br>
-        依據市場熱度、搜尋需求與品牌訊號，提供需求方向燈號（非開戶數點預測）<br>
-        <span style="color:var(--warn)">本版本以昨日單日訊號推估未來7日需求方向，並非使用過去7日平均值建立模型。</span>
+        填入前一日各指標 → 需求指數即時更新 → 評估<strong>市場自然需求當前溫度</strong><br>
+        作為自然需求觀察與廣告投放時機判斷依據（非開戶數點預測）<br>
+        <span style="color:var(--warn)">本工具提供短期需求方向參考，不提供開戶數預測，亦不直接預測廣告開戶成效。</span>
       </div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
@@ -399,7 +424,7 @@ footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--border);displ
         <input type="number" class="ip-input c-vol" id="v-vol" min="0" max="30000" step="100" value="13168" oninput="calcScore()">
         <span class="ip-unit">億元</span>
       </div>
-      <div class="ip-hint">填入億元數值（例：8500）<br><span id="vol-hint-dynamic">動態百分位計算中…</span></div>
+      <div class="ip-hint">填入億元數值（例：8500）<br><span id="vol-hint-dynamic">動態百分位計算中…</span><br><span id="vol-pct-ref" style="color:var(--text-dim)">P20=— / P50=— / P80=—</span></div>
       <div class="vol-badge" id="vol-badge"></div>
     </div>
   </div>
@@ -407,9 +432,10 @@ footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--border);displ
   <!-- 需求指數結果 -->
   <div class="score-result">
     <div style="text-align:center;min-width:120px">
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:.08em;margin-bottom:4px">未來7日需求指數</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:.08em;margin-bottom:4px">市場自然需求溫度</div>
       <div><span class="score-big" id="score-num">—</span><span class="score-denom">/100</span></div>
       <div id="score-pill"></div>
+      <div id="regime-badge" style="margin-top:6px;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.04em"></div>
     </div>
     <div class="score-bars">
       <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:.06em;margin-bottom:2px;display:flex;justify-content:space-between"><span>指數分解</span><span style="color:rgba(176,128,0,.8)">Expert Weight v1</span></div>
@@ -457,10 +483,34 @@ footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--border);displ
   </div>
 </div>
 
+<!-- 市場狀態說明表 -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;margin-bottom:20px">
+  <div style="background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.2);border-radius:6px;padding:12px;text-align:center">
+    <div style="font-family:var(--mono);font-size:18px;font-weight:600;color:var(--negative);line-height:1">&lt;40</div>
+    <div style="font-size:12px;font-weight:600;color:var(--negative);margin:4px 0">冷市場</div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.6">自然需求不足<br>廣告宜教育測試</div>
+  </div>
+  <div style="background:rgba(176,128,0,.06);border:1px solid rgba(176,128,0,.2);border-radius:6px;padding:12px;text-align:center">
+    <div style="font-family:var(--mono);font-size:18px;font-weight:600;color:var(--warn);line-height:1">40–60</div>
+    <div style="font-size:12px;font-weight:600;color:var(--warn);margin:4px 0">正常市場</div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.6">需求平穩<br>維持正常投放節奏</div>
+  </div>
+  <div style="background:rgba(0,168,130,.06);border:1px solid rgba(0,168,130,.2);border-radius:6px;padding:12px;text-align:center">
+    <div style="font-family:var(--mono);font-size:18px;font-weight:600;color:var(--accent);line-height:1">60–80</div>
+    <div style="font-size:12px;font-weight:600;color:var(--accent);margin:4px 0">熱市場</div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.6">需求升溫<br>適合加碼承接</div>
+  </div>
+  <div style="background:rgba(22,163,74,.06);border:1px solid rgba(22,163,74,.25);border-radius:6px;padding:12px;text-align:center">
+    <div style="font-family:var(--mono);font-size:18px;font-weight:600;color:var(--positive);line-height:1">&gt;80</div>
+    <div style="font-size:12px;font-weight:600;color:var(--positive);margin:4px 0">狂熱市場</div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.6">需求熱絡<br>全力承接，品牌防守</div>
+  </div>
+</div>
+
 <!-- ══ 5. 雙指數 ══ -->
-<div class="sl"><div class="sl-dot" style="background:var(--accent3)"></div>雙指數架構 · 市場需求 vs 品牌需求</div>
+<div class="sl"><div class="sl-dot" style="background:var(--accent3)"></div>雙指數架構 · 市場需求（主訊號）vs 品牌需求（輔助訊號）</div>
 <div class="dual-index">
-  <div class="di-card" style="border-color:rgba(0,168,130,.3)">
+  <div class="di-card" style="border-color:rgba(0,168,130,.4);border-width:2px">
     <div class="di-tag" style="color:var(--accent)"><div style="width:6px;height:6px;border-radius:50%;background:var(--accent)"></div>市場需求分數 Market Demand</div>
     <div><span class="di-score" id="mds-score" style="color:var(--accent)">—</span><span style="font-family:var(--mono);font-size:16px;color:var(--text-dim)">/100</span></div>
     <div class="di-label">基金 Trends + ETF Trends + 台股成交量</div>
@@ -470,8 +520,8 @@ footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--border);displ
       <div class="di-bar-row"><div class="di-bar-name">台股量</div><div class="di-track"><div class="di-fill" id="mds-vol" style="background:var(--warn)"></div></div><div class="di-num" id="mds-vol-n" style="color:var(--warn)">—</div></div>
     </div>
   </div>
-  <div class="di-card" style="border-color:rgba(74,114,232,.3)">
-    <div class="di-tag" style="color:var(--accent3)"><div style="width:6px;height:6px;border-radius:50%;background:var(--accent3)"></div>品牌需求分數 Brand Demand</div>
+  <div class="di-card" style="border-color:rgba(74,114,232,.2);opacity:0.82">
+    <div class="di-tag" style="color:var(--accent3)"><div style="width:6px;height:6px;border-radius:50%;background:var(--accent3)"></div>品牌需求分數 Brand Demand<span style="font-family:var(--mono);font-size:9px;padding:1px 6px;background:rgba(74,114,232,.1);border-radius:2px;margin-left:6px;color:var(--text-dim)">輔助訊號 · 品牌權重 5%</span></div>
     <div><span class="di-score" id="bds-score" style="color:var(--accent3)">—</span><span style="font-family:var(--mono);font-size:16px;color:var(--text-dim)">/100</span></div>
     <div class="di-label">品牌 Trends（70% 日期為 0，非零即為事件訊號）</div>
     <div class="di-bars">
@@ -484,7 +534,7 @@ footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--border);displ
 <!-- 四象限判讀 -->
 <div class="quadrant">
   <div class="ct">四象限判讀</div>
-  <div class="cs">依當日市場需求分數（&gt;/&lt;50）與品牌需求分數（&gt;/&lt;10）組合，判斷需求結構。目前判讀：<strong id="quadrant-label">—</strong></div>
+  <div class="cs">依當日市場需求分數（&gt;/&lt;50，歷史分位數門檻）與品牌需求分數（&gt;/&lt;10，品牌搜尋非零事件門檻）組合判斷。目前判讀：<strong id="quadrant-label">—</strong><br><span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">門檻來源：Historical Percentile（市場需求）/ Brand Search Activation（品牌需求）</span></div>
   <div class="quad-grid">
     <div class="quad-cell" id="q-hh" style="border-color:rgba(0,168,130,.3);background:rgba(0,168,130,.04)">
       <div class="quad-title" style="color:var(--positive)">🔥 市場熱 ＋ 品牌熱</div>
@@ -506,13 +556,13 @@ footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--border);displ
 </div>
 
 <!-- ══ 6. 需求指數歷史對照 ══ -->
-<div class="sl"><div class="sl-dot" style="background:var(--accent)"></div>需求指數歷史對照 · 各分數區間對應開戶分布</div>
+<div class="sl"><div class="sl-dot" style="background:var(--accent)"></div>歷史需求環境參考 · 各需求溫度區間的市場觀察</div>
 <div class="card" style="margin-bottom:20px">
-  <div class="ct">各需求指數區間的實際開戶數（歷史對照）</div>
+  <div class="ct">歷史各需求環境下的開戶分布觀察</div>
   <div class="cs" id="hist-subtitle">依需求指數分四區間，顯示各區間歷史日均開戶數。目前使用 <strong>All Data</strong> 資料集。</div>
   <div class="odi-hist" id="odi-hist-cells"></div>
   <div style="margin-top:12px;font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.7;padding:8px 12px;background:var(--surface2);border-radius:4px">
-    ⚠ 此為相關性對照，不是預測模型。「需求指數高」時開戶高，可能來自共同的市場環境因素，非直接因果。樣本數較少的區間（n &lt; 20）請謹慎解讀。
+    ⚠ 此為歷史環境分布觀察，不是預測模型。「需求溫度高」時開戶高，可能來自共同的市場環境因素（牛市、季節性），非直接因果。各區間樣本數差距大，請留意可信度標示。
   </div>
 </div>
 
@@ -530,12 +580,16 @@ footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--border);displ
     </div>
   </div>
   <div class="card">
-    <div class="ct">自然開戶 vs 廣告開戶（月度）</div>
-    <div class="cs">灰底 = 2025 歸因異常期，廣告開戶數有系統性高估，不可與 2026 直接比較。</div>
+    <div style="background:rgba(0,168,130,.06);border:1px solid rgba(0,168,130,.2);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:13px;font-weight:600;color:var(--accent)">2026 年開戶成長主要來自自然需求，而非廣告擴張</div>
+    <div class="ct">開戶來源結構翻轉（2026）</div>
+    <div class="cs">
+      2026/03 後自然開戶超越廣告開戶，成為主要成長來源。廣告開戶維持 70–88 戶/日區間幾乎不成長；自然開戶從 46 戶/日成長至 249 戶/日（+441%）。<br>
+      <strong style="color:var(--accent)">自然需求已成為主要成長引擎。需求指數追蹤的正是這個升溫，而非廣告開戶。</strong>
+    </div>
     <div class="chart-wrap"><canvas id="structChart"></canvas></div>
     <div class="leg-row">
-      <div class="leg"><div class="leg-dot" style="background:rgba(0,168,130,.75)"></div>自然開戶</div>
-      <div class="leg"><div class="leg-dot" style="background:rgba(224,85,32,.55)"></div>廣告開戶</div>
+      <div class="leg"><div class="leg-dot" style="background:rgba(0,168,130,.75)"></div>自然開戶（主要成長來源）</div>
+      <div class="leg"><div class="leg-dot" style="background:rgba(224,85,32,.55)"></div>廣告開戶（相對穩定）</div>
     </div>
   </div>
 </div>
@@ -553,6 +607,44 @@ footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--border);displ
 </div>
 
 <!-- ══ 8. 相關性分析 ══ -->
+<div class="card" style="margin-bottom:16px;border-left:3px solid var(--accent)">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+    <div class="ct">Key Findings · 核心結論</div>
+    <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">固定採用 2026 Only（品牌 Trends 為 All Data）</span>
+  </div>
+  <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.7;margin-bottom:12px;padding:8px 10px;background:var(--surface2);border-radius:4px">
+    本區塊數值<strong style="color:var(--text)">固定</strong>，不隨下方「資料集選擇」切換而改變。主要指標採用 2026 Only（n=151），排除 2025 歸因異常期，較能反映真實需求訊號強度；品牌 Trends 因 2026 樣本中非零事件較少，採用 All Data（n=304）以提高穩定性。
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+    <div style="background:var(--surface2);border-radius:6px;padding:12px;text-align:center">
+      <div style="font-family:var(--mono);font-size:22px;font-weight:600;color:var(--accent);line-height:1">0.51</div>
+      <div style="font-size:12px;font-weight:600;margin:5px 0">ETF Trends</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--positive)">最強需求訊號</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:3px">Detrended r · 2026 Only</div>
+    </div>
+    <div style="background:var(--surface2);border-radius:6px;padding:12px;text-align:center">
+      <div style="font-family:var(--mono);font-size:22px;font-weight:600;color:var(--accent);line-height:1">0.43</div>
+      <div style="font-size:12px;font-weight:600;margin:5px 0">基金 Trends</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--accent)">次強需求訊號</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:3px">Detrended r · 2026 Only</div>
+    </div>
+    <div style="background:var(--surface2);border-radius:6px;padding:12px;text-align:center">
+      <div style="font-family:var(--mono);font-size:22px;font-weight:600;color:var(--warn);line-height:1">0.28</div>
+      <div style="font-size:12px;font-weight:600;margin:5px 0">台股成交量</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--warn)">中度訊號</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:3px">Detrended r · 2026 Only</div>
+    </div>
+    <div style="background:var(--surface2);border-radius:6px;padding:12px;text-align:center">
+      <div style="font-family:var(--mono);font-size:22px;font-weight:600;color:var(--accent3);line-height:1">0.32</div>
+      <div style="font-size:12px;font-weight:600;margin:5px 0">品牌 Trends</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--accent3)">事件偵測用途</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:3px">Detrended r · All Data</div>
+    </div>
+  </div>
+  <div style="margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.7">
+    ETF / 基金 Trends 為最佳領先指標（Lag 1），台股成交量為同日訊號（Lag 0），品牌 Trends 以事件偵測為主。下方圖表與表格的數值會隨「資料集選擇」切換更新，與本區塊固定值不同屬正常現象。
+  </div>
+</div>
 <div class="sl"><div class="sl-dot" style="background:var(--text-dim)"></div>Correlation Analysis：短期波動 vs 長期共振 <span id="corr-dataset-label" style="font-size:10px;color:var(--accent);margin-left:4px">· All Data</span></div>
 <div class="g2">
   <div class="card">
@@ -623,6 +715,56 @@ footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--border);displ
   </div>
 </div>
 
+<!-- ══ 市場需求與廣告角色 ══ -->
+<div class="sl"><div class="sl-dot" style="background:var(--accent2)"></div>市場需求與廣告角色</div>
+<div class="card" style="margin-bottom:20px">
+  <div class="ct" style="margin-bottom:4px">需求指數不是廣告開戶預測模型</div>
+  <div class="cs" style="margin-bottom:16px">它的價值在於判斷市場是否已進入高需求狀態，作為廣告投放時機與策略的參考依據。</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <div style="background:rgba(22,163,74,.05);border:1px solid rgba(22,163,74,.3);border-radius:8px;padding:20px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <span style="font-size:20px">🟢</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--positive)">需求指數高（&gt;65）</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">市場自然需求升溫</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text-mid);line-height:1.9;margin-bottom:12px">
+        使用者已主動搜尋基金、ETF、投資工具。市場上有一批人正在自發尋找投資管道。
+      </div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:.06em;margin-bottom:8px">廣告角色：攔截與承接需求</div>
+      <div style="font-size:12px;color:var(--text);line-height:1.8;background:rgba(22,163,74,.06);border-radius:4px;padding:10px">
+        ✓ 適合提高出價，擴大覆蓋<br>
+        ✓ 強化高意圖素材（費率計算器、立即開戶）<br>
+        ✓ 品牌防守——確保品牌字不被競品搶走<br>
+        ✓ 搜尋廣告出價加碼，承接主動搜尋流量
+      </div>
+    </div>
+    <div style="background:rgba(220,38,38,.04);border:1px solid rgba(220,38,38,.2);border-radius:8px;padding:20px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <span style="font-size:20px">🔴</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--negative)">需求指數低（&lt;40）</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">市場自然需求不足</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text-mid);line-height:1.9;margin-bottom:12px">
+        市場自發性投資興趣偏低，廣告需要「創造興趣」而非「承接需求」，轉換效率通常較低。
+      </div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:.06em;margin-bottom:8px">廣告角色：教育與測試</div>
+      <div style="font-size:12px;color:var(--text);line-height:1.8;background:rgba(220,38,38,.04);border-radius:4px;padding:10px">
+        ✗ 不宜單純加碼預算，加碼不等於加開戶<br>
+        ✓ 偏向教育型內容（市場介紹、投資入門）<br>
+        ✓ 測試型素材——低成本驗證創意方向<br>
+        ✓ 再行銷為主，鎖定已接觸但未轉換用戶
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:14px;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text-mid);line-height:1.8">
+    <strong style="color:var(--text)">重要說明：</strong>需求指數主要反映<strong>自然市場需求</strong>（搜尋熱度 + 台股成交量），與廣告開戶成效的直接相關性有限。廣告表現仍需搭配 Google Ads / Meta 後台數據（Clicks、CTR、CPC、CVR、CPA）共同判斷，不能單以需求指數決定廣告預算。
+  </div>
+</div>
+
 <!-- ══ 9. 品牌事件 Timeline ══ -->
 <div class="sl"><div class="sl-dot" style="background:var(--accent3)"></div>品牌事件紀錄 · Brand Event Timeline</div>
 <div class="card" style="margin-bottom:20px">
@@ -639,19 +781,81 @@ footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--border);displ
        color:var(--text-dim);margin-top:8px;min-height:16px"></div>
 </div>
 
+<!-- ══ Data Governance ══ -->
+<div class="sl"><div class="sl-dot" style="background:var(--accent3)"></div>Data Governance · Frozen Dataset 機制</div>
+<div class="card" style="margin-bottom:20px;border-left:3px solid var(--accent3)">
+  <div class="ct" style="margin-bottom:4px">為什麼要建立 Frozen Dataset？</div>
+  <div class="cs" style="margin-bottom:18px">Google Trends 為相對指數，歷史數值會因重新標準化而回溯修正。本系統每日保存當下數值快照，確保分析結果可重現。</div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:18px">
+    <div style="background:rgba(220,38,38,.05);border:1px solid rgba(220,38,38,.2);border-radius:6px;padding:16px">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--negative);letter-spacing:.08em;margin-bottom:8px">⚠ 問題：回溯修正</div>
+      <div style="font-size:12px;color:var(--text-mid);line-height:1.8">
+        Google Trends 以查詢區間內最高點為 100，新資料加入後歷史值等比縮放。<br><br>
+        例：6/8 的 ETF Trends 今天查是 55，一週後再查可能變成 49。
+      </div>
+    </div>
+    <div style="background:rgba(74,114,232,.05);border:1px solid rgba(74,114,232,.2);border-radius:6px;padding:16px">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--accent3);letter-spacing:.08em;margin-bottom:8px">✓ 解法：每日快照</div>
+      <div style="font-size:12px;color:var(--text-mid);line-height:1.8">
+        每天填表並按「記錄今日數據」，系統將當下觀測值永久保存至 Google Sheets。<br><br>
+        未來分析只使用 Frozen Dataset，不重新抓取 Google Trends。
+      </div>
+    </div>
+    <div style="background:rgba(0,168,130,.05);border:1px solid rgba(0,168,130,.2);border-radius:6px;padding:16px">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:.08em;margin-bottom:8px">目標：可重現性</div>
+      <div style="font-size:12px;color:var(--text-mid);line-height:1.8">
+        今天跑相關性分析與三個月後跑，結果應一致。<br><br>
+        這是未來導入 Regression Weight 與 SHAP Analysis 的前提條件。
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:.06em;margin-bottom:10px">目前資料狀態</div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12px">歸因正常期（2026）</span>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--positive);font-weight:600">n=151 天</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12px">Regression Weight 啟動門檻</span>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--warn);font-weight:600">≥ 365 天</span>
+        </div>
+        <div style="background:var(--border);height:6px;border-radius:3px;overflow:hidden;margin-top:4px">
+          <div style="width:41%;height:100%;background:var(--accent);border-radius:3px"></div>
+        </div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim)">進度：151/365（41%）· 預計 2026/12 達標</div>
+      </div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:.06em;margin-bottom:10px">每日記錄操作指引</div>
+      <div style="font-size:12px;color:var(--text-mid);line-height:1.9">
+        ① 查昨日 Google Trends（近90天）<br>
+        ② 查 TWSE 昨日台股成交量<br>
+        ③ 填入四個欄位，按「💾 記錄今日數據」<br>
+        ④ 確認綠色「✓ 已新增記錄」出現<br>
+        <span style="color:var(--warn)">⚠ 星期一請填上週五 Trends</span>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ 10. 限制說明 ══ -->
 <div class="sl"><div class="sl-dot" style="background:var(--text-dim)"></div>使用限制與 Future Roadmap</div>
 <div class="g2">
   <div class="disc">
     <h3>使用前請閱讀</h3>
     <ul>
-      <li><span>①</span><span>本儀表板<strong>不提供開戶數點預測</strong>。需求指數是方向性燈號，「未來7天需求強弱」≠「明天會開幾戶」。</span></li>
+      <li><span>①</span><span>本儀表板<strong>不提供開戶數點預測</strong>。需求指數反映市場自然需求是否正在升溫或降溫，不等於「明天或未來幾天會開幾戶」。</span></li>
       <li><span>②</span><span><strong>2025年資料含歸因異常</strong>（廣告開戶浮報），不適合用於模型訓練。所有圖表已標示異常期，請留意灰底區域。</span></li>
       <li><span>③</span><span><strong>Google Trends 為相對值（0–100）</strong>，同一時期內比較才有意義，跨時期絕對數字不可比。</span></li>
       <li><span>④</span><span><strong>品牌 Trends 70% 為 0</strong>，非零才有意義。品牌需求分數在多數日子接近 0 是正常現象，不代表品牌無效。</span></li>
       <li><span>⑤</span><span><strong>指數權重為 Expert Weight v1</strong>（人工設定），尚未以統計方法驗證。待 2026 年資料累積 ≥12 個月後再導入 Regression Weight。</span></li>
       <li><span>⑥</span><span><strong>相關性 ≠ 因果</strong>。指標與開戶數的同步變動，可能來自共同的市場環境因素（牛市、季節性），而非直接因果。</span></li>
       <li><span>⑦</span><span><strong>模型需每季重新校正</strong>。百分位門檻與正規化參數基於現有資料，市場結構改變後會偏移。</span></li>
+      <li><span>⑧</span><span><strong>本工具主要監測自然市場需求，不直接預測廣告開戶成效。</strong>廣告表現仍需搭配 Google Ads / Meta 後台數據，如 Clicks、CTR、CPC、CVR、CPA 共同判斷。需求指數高不等於廣告效率高；需求指數低不等於廣告一定無效。</span></li>
     </ul>
   </div>
   <div class="card">
@@ -787,7 +991,7 @@ footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--border);displ
 </div>
 
 <footer>
-  <span>ANUE FUND PLATFORM · 開戶需求先行指標監測 v8 · INTERNAL USE ONLY</span>
+  <span>ANUE FUND PLATFORM · 市場自然需求溫度計 v13 · INTERNAL USE ONLY</span>
   <span>n=304天 · 2025.08–2026.05 · Expert Weight v1 · 台股成交量單位：億元</span>
 </footer>
 </div>
@@ -799,6 +1003,10 @@ footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--border);displ
 // 本機測試時留空，功能仍可正常運作（記錄功能停用）
 // ════════════════════════════════════════════════════
 const API_URL = 'https://script.google.com/macros/s/AKfycbwGpwiq19FYYfr3ogatM0JqE8awSct4jAeMe4PqozevC5ayFcs4kw00ayWUs06nJiESjg/exec';
+
+// 簡易驗證 token：寫入操作（POST）需帶此值，Apps Script 端比對
+// 注意：此為基本防護（防止隨機掃描濫用），非高強度安全機制
+const API_TOKEN = 'anue-demand-2026';
 
 const MONO = "'IBM Plex Mono',monospace";
 Chart.defaults.font.family = MONO;
@@ -812,7 +1020,7 @@ const STATS = {
   all: {
     n: 304,
     norm: { fund:{lo:28.1,hi:94.0}, etf:{lo:33.0,hi:90.0}, vol:{lo:4260,hi:12784}, brand:{lo:0,hi:84.0} },
-    vol_p20: 4752, vol_p80: 9329,
+    vol_p20: 4752, vol_p50: 6197, vol_p80: 9329,
     corr_raw:      { fund:0.288, etf:0.097, brand:0.478, vol:0.759, pct:0.072 },
     corr_dt:       { fund:0.458, etf:0.422, brand:0.326, vol:0.417, pct:0.011 },
     lag: {
@@ -831,7 +1039,7 @@ const STATS = {
   '26': {
     n: 151,
     norm: { fund:{lo:28.5,hi:94.0}, etf:{lo:30.0,hi:90.5}, vol:{lo:6550,hi:14793}, brand:{lo:0,hi:87.5} },
-    vol_p20: 7110, vol_p80: 11021,
+    vol_p20: 7110, vol_p50: 9248, vol_p80: 11021,
     corr_raw:      { fund:0.549, etf:0.324, brand:0.415, vol:0.584, pct:0.019 },
     corr_dt:       { fund:0.428, etf:0.513, brand:0.317, vol:0.275, pct:-0.020 },
     lag: {
@@ -859,7 +1067,15 @@ function setDataset(ds) {
   renderCorr();
   renderLag();
   renderHist();
-  calcScore(); // recalc vol percentile with new thresholds
+  updateVolPctRef();
+  calcScore();
+}
+
+function updateVolPctRef() {
+  const s = STATS[currentDS];
+  const label = currentDS === 'all' ? 'All Data' : '2026 Only';
+  const el = document.getElementById('vol-pct-ref');
+  if (el) el.innerHTML = `P20=${s.vol_p20}億 / P50=${s.vol_p50}億 / P80=${s.vol_p80}億 <span style="color:var(--text-dim)">(${label})</span>`;
 }
 
 // ══ 日期 + 週一偵測 ══
@@ -939,21 +1155,33 @@ function calcScore(){
 
   // 更新主指數
   document.getElementById('score-num').textContent = scoreR;
+  // Demand Regime
+  let regime, regimeColor;
+  if(score>=80)      { regime='狂熱市場'; regimeColor='var(--positive)'; }
+  else if(score>=60) { regime='熱市場';   regimeColor='var(--accent)'; }
+  else if(score>=40) { regime='正常市場'; regimeColor='var(--warn)'; }
+  else               { regime='冷市場';   regimeColor='var(--negative)'; }
+  const regimeBadge = document.getElementById('regime-badge');
+  if(regimeBadge) {
+    regimeBadge.textContent = '市場狀態：' + regime;
+    regimeBadge.style.color = regimeColor;
+  }
+
   let color, pillStyle, actionHTML;
   if(score>=65){
     color='var(--positive)';pillStyle='background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.3);color:var(--positive)';
     document.getElementById('score-pill').innerHTML=`<span class="score-pill" style="${pillStyle}">🟢 高需求</span>`;
-    actionHTML=`<div style="font-family:var(--mono);font-size:10px;color:var(--positive);margin-bottom:7px;letter-spacing:.06em">▶ 建議行動</div>
+    actionHTML=`<div style="font-family:var(--mono);font-size:10px;color:var(--positive);margin-bottom:7px;letter-spacing:.06em">▶ 建議行動（${regime}）</div>
       <div style="font-size:12px;line-height:1.8;color:var(--text-mid)">・廣告出價可積極<br>・強化投資入門 / ETF 素材<br>・把握高需求窗口${fund>70?'<br>・<span style="color:var(--accent)">基金 Trends 觸發 ✓</span>':''}${etf>65?'<br>・<span style="color:var(--accent3)">ETF Trends 觸發 ✓</span>':''}${vol>vp80?'<br>・<span style="color:var(--positive)">台股高量日 ✓</span>':''}</div>`;
   } else if(score>=40){
     color='var(--warn)';pillStyle='background:rgba(176,128,0,.1);border:1px solid rgba(176,128,0,.3);color:var(--warn)';
     document.getElementById('score-pill').innerHTML=`<span class="score-pill" style="${pillStyle}">🟡 中等需求</span>`;
-    actionHTML=`<div style="font-family:var(--mono);font-size:10px;color:var(--warn);margin-bottom:7px;letter-spacing:.06em">▶ 建議行動</div>
+    actionHTML=`<div style="font-family:var(--mono);font-size:10px;color:var(--warn);margin-bottom:7px;letter-spacing:.06em">▶ 建議行動（${regime}）</div>
       <div style="font-size:12px;line-height:1.8;color:var(--text-mid)">・維持正常投放節奏<br>・觀察 Trends 走向<br>・不需要特別加碼</div>`;
   } else {
     color='var(--negative)';pillStyle='background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.3);color:var(--negative)';
     document.getElementById('score-pill').innerHTML=`<span class="score-pill" style="${pillStyle}">🔴 低需求</span>`;
-    actionHTML=`<div style="font-family:var(--mono);font-size:10px;color:var(--negative);margin-bottom:7px;letter-spacing:.06em">▶ 建議行動</div>
+    actionHTML=`<div style="font-family:var(--mono);font-size:10px;color:var(--negative);margin-bottom:7px;letter-spacing:.06em">▶ 建議行動（${regime}）</div>
       <div style="font-size:12px;line-height:1.8;color:var(--text-mid)">・廣告加碼效益有限<br>・保守出價，降低預算<br>・改以測試型素材為主</div>`;
   }
   document.getElementById('score-num').style.color=color;
@@ -1187,6 +1415,7 @@ async function apiPost(body) {
   // Use GET with encoded payload to avoid CORS preflight
   const url = new URL(API_URL);
   url.searchParams.set('method', 'POST');
+  url.searchParams.set('token', API_TOKEN);
   url.searchParams.set('payload', JSON.stringify(body));
   const res  = await fetch(url.toString(), {redirect:'follow'});
   const json = await res.json();
@@ -1223,10 +1452,13 @@ async function saveToday() {
   // 四象限
   const qLabel = document.getElementById('quadrant-label').textContent;
 
-  // 星期
+  // 觀測日期（已處理週一→上週五的邏輯，存於 yesterday-date 文字中）
+  const obsDateStr = document.getElementById('yesterday-date').textContent.split('（')[0].replace(/\./g,'-');
+
+  // 星期：依據「觀測日期」重新計算，而非填表當天
   const dayNames = ['日','一','二','三','四','五','六'];
-  const now = new Date();
-  const weekday = '週' + dayNames[now.getDay()];
+  const obsDateObj = new Date(obsDateStr);
+  const weekday = isNaN(obsDateObj.getTime()) ? '' : '週' + dayNames[obsDateObj.getDay()];
 
   // 成交量位階
   const volHint = document.getElementById('vol-hint-dynamic').textContent;
@@ -1235,7 +1467,7 @@ async function saveToday() {
   const volPct = volPctMatch ? volPctMatch[1] + '%' : '';
 
   const data = {
-    date:         document.getElementById('yesterday-date').textContent.split('（')[0].replace(/\./g,'-'),
+    date:         obsDateStr,
     weekday,
     fund_trends:  fund,
     etf_trends:   etf,
@@ -1414,6 +1646,7 @@ function deleteBrandEventLocal(i) {
 renderCorr();
 renderLag();
 renderHist();
+updateVolPctRef();
 calcScore();
 loadHistory();
 loadBrandEvents();
